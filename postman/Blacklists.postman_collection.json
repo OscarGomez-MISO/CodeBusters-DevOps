@@ -1,0 +1,48 @@
+{
+  "info": {
+    "name": "CodeBusters - Blacklists",
+    "description": "Microservicio de blacklist global. Configurar base_url y token en el ambiente. Ejecutar en orden para validar los escenarios.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {"type": "bearer", "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]},
+  "item": [
+    {
+      "name": "1. Health check",
+      "request": {"method": "GET", "auth": {"type": "noauth"}, "url": "{{base_url}}/health"},
+      "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.test('Healthy', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().status).to.eql('ok'); });"]}}]
+    },
+    {
+      "name": "2. Agregar correo",
+      "event": [
+        {"listen": "prerequest", "script": {"type": "text/javascript", "exec": ["pm.collectionVariables.set('email', 'blacklist-' + pm.variables.replaceIn('{{$guid}}') + '@example.com');"]}},
+        {"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.test('Created', () => { pm.response.to.have.status(201); pm.expect(pm.response.json().created).to.eql(true); });"]}}
+      ],
+      "request": {"method": "POST", "url": "{{base_url}}/blacklists", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"email\": \"{{email}}\",\n  \"app_uuid\": \"{{app_uuid}}\",\n  \"blocked_reason\": \"Spam\"\n}", "options": {"raw": {"language": "json"}}}}
+    },
+    {
+      "name": "3. Consultar correo bloqueado",
+      "request": {"method": "GET", "url": "{{base_url}}/blacklists/{{email}}"},
+      "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.test('Blacklisted', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().is_blacklisted).to.eql(true); pm.expect(pm.response.json().blocked_reason).to.eql('Spam'); });"]}}]
+    },
+    {
+      "name": "4. Rechazar duplicado",
+      "request": {"method": "POST", "url": "{{base_url}}/blacklists", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"email\":\"{{email}}\",\"app_uuid\":\"{{app_uuid}}\"}"}},
+      "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.test('Duplicate', () => { pm.response.to.have.status(409); pm.expect(pm.response.json().created).to.eql(false); });"]}}]
+    },
+    {
+      "name": "5. Consultar correo ausente",
+      "request": {"method": "GET", "url": "{{base_url}}/blacklists/absent-{{$guid}}@example.com"},
+      "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.test('Not blacklisted', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().is_blacklisted).to.eql(false); pm.expect(pm.response.json().blocked_reason).to.eql(null); });"]}}]
+    },
+    {
+      "name": "6. Validar UUID",
+      "request": {"method": "POST", "url": "{{base_url}}/blacklists", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"email\":\"person@example.com\",\"app_uuid\":\"invalid\"}"}},
+      "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.test('Invalid UUID', () => pm.response.to.have.status(400));"]}}]
+    },
+    {
+      "name": "7. Rechazar sin token",
+      "request": {"method": "GET", "auth": {"type": "noauth"}, "url": "{{base_url}}/blacklists/{{email}}"},
+      "event": [{"listen": "test", "script": {"type": "text/javascript", "exec": ["pm.test('Unauthorized', () => pm.response.to.have.status(401));"]}}]
+    }
+  ]
+}
