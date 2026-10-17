@@ -1,4 +1,4 @@
-from flask import request
+from flask import current_app, request
 from flask_jwt_extended import jwt_required
 from flask_restful import Resource
 from marshmallow import ValidationError, fields, validate
@@ -6,8 +6,10 @@ from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from .extensions import db
+from .instance import ec2_instance_id
 from .models import Blacklist
 from .schemas import blacklist_schema
+from .version import APP_VERSION
 
 
 class BlacklistCollection(Resource):
@@ -57,9 +59,14 @@ class BlacklistItem(Resource):
 
 class Health(Resource):
     def get(self):
+        # Version and instance show which deployment and EC2 instance answered.
+        details = {
+            "version": APP_VERSION,
+            "instance": current_app.config.get("INSTANCE_ID") or ec2_instance_id(),
+        }
         try:
             db.session.execute(text("SELECT 1"))
         except SQLAlchemyError:
             db.session.rollback()
-            return {"status": "unavailable"}, 503
-        return {"status": "ok"}, 200
+            return {"status": "unavailable", **details}, 503
+        return {"status": "ok", **details}, 200

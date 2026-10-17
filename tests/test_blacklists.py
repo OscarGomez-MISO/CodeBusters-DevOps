@@ -1,11 +1,13 @@
 from datetime import datetime
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from sqlalchemy.exc import OperationalError
 
+from app import instance
 from app.extensions import db
 from app.models import Blacklist
+from app.version import APP_VERSION
 
 PAYLOAD = {
     "email": "person@example.com",
@@ -104,13 +106,36 @@ def test_forwarded_header_is_ignored_without_proxy_trust(app, client, auth):
 
 def test_health_database_failure(client):
     with patch.object(db.session, "execute", side_effect=OperationalError("SELECT 1", {}, Exception())):
-        assert client.get("/health").status_code == 503
+        response = client.get("/health")
+    assert response.status_code == 503
+    assert response.json == {"status": "unavailable", "version": APP_VERSION, "instance": "test-instance"}
 
 
 def test_health_and_cli(app, client):
-    assert client.get("/health").json == {"status": "ok"}
+    assert client.get("/health").json == {"status": "ok", "version": APP_VERSION, "instance": "test-instance"}
     runner = app.test_cli_runner()
     assert runner.invoke(args=["init-db"]).exit_code == 0
     result = runner.invoke(args=["generate-token"])
     assert result.exit_code == 0
     assert client.get("/blacklists/person@example.com", headers={"Authorization": "Bearer " + result.output.strip()}).status_code == 200
+
+
+@pytest.fixture
+def fresh_instance_cache(monkeypatch):
+    monkeypatch.setattr(instance, "_instance_id", None)
+
+
+def test_ec2_instance_id_uses_imdsv2(fresh_instance_cache):
+    token, instance_id = MagicMock(), MagicMock()
+    token.read.return_value = b"token"
+    instance_id.read.return_value = b"i-0123456789abcdef0"
+    with patch.object(instance, "urlopen", side_effect=[token, instance_id]) as urlopen:
+        assert instance.ec2_instance_id() == "i-0123456789abcdef0"
+        assert instance.ec2_instance_id() == "i-0123456789abcdef0"
+    assert urlopen.call_count == 2
+    assert urlopen.call_args_list[1].args[0].get_header("X-aws-ec2-metadata-token") == "token"
+
+
+def test_ec2_instance_id_outside_ec2(fresh_instance_cache):
+    with patch.object(instance, "urlopen", side_effect=OSError("no metadata")):
+        assert instance.ec2_instance_id() == "local"
