@@ -12,7 +12,6 @@ def app():
         "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
         "JWT_SECRET_KEY": "test-secret-only",
         "TRUST_PROXY_HEADERS": False,
-        "INSTANCE_ID": "test-instance",
     })
     with app.app_context():
         db.create_all()

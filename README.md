@@ -91,12 +91,11 @@ Sin autenticacion. Comprueba conectividad con la base de datos: `200` con
 La ruta `/` ofrece el mismo chequeo.
 
 ```json
-{"status": "ok", "version": "1.0.0", "instance": "i-0123456789abcdef0"}
+{"status": "ok", "version": "1.0.0"}
 ```
 
-`version` es `APP_VERSION` de `app/version.py`. `instance` es el ID de la instancia
-EC2 que respondio, obtenido con IMDSv2 una vez por proceso; fuera de EC2 es `local`.
-Ambos campos permiten ver que version y que instancia responde durante un despliegue.
+`version` es `APP_VERSION` de `app/version.py` y permite ver que version responde
+durante un despliegue.
 
 ## Pruebas
 
@@ -167,12 +166,12 @@ Adjuntar su URL al documento de entrega.
 .\.venv\Scripts\python.exe scripts/watch_deploy.py http://<ambiente>.elasticbeanstalk.com --log despliegue.log
 ```
 
-Cada linea muestra hora, codigo HTTP, version e instancia que respondio. El
-resumen final indica errores, cuando aparecio la nueva version, cuando respondio
-por ultima vez la anterior, y las instancias vistas con las versiones que
-sirvieron: una instancia con ambas versiones se actualizo en su lugar; una que
-solo sirvio la nueva fue creada durante el despliegue. El tiempo total del
-despliegue se toma de *Events* en la consola.
+Cada linea muestra hora, codigo HTTP y version que respondio. El resumen final
+indica errores, cuando aparecio la nueva version y cuando respondio por ultima
+vez la anterior. Si las instancias eran nuevas o existentes se documenta con
+capturas de EC2 (ID y *Launch time*) y de la pestana *Health* del ambiente antes,
+durante y despues del despliegue. El tiempo total del despliegue se toma de
+*Events* en la consola.
 
 La configuracion no fija Auto Scaling ni las politicas de despliegue: se cambian
 manualmente en AWS como parte del ejercicio. Si falla `init-db`, revisar los logs

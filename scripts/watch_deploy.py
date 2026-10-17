@@ -1,5 +1,5 @@
 """Poll /health during a Beanstalk deployment and summarize which versions
-and instances answered. Stop it with Ctrl+C once the deployment finishes.
+answered. Stop it with Ctrl+C once the deployment finishes.
 
 Usage: python scripts/watch_deploy.py <base_url> [--interval 1] [--log file]
 """
@@ -12,7 +12,7 @@ from urllib.request import urlopen
 
 
 def poll(url, timeout):
-    """Return (status code or None, version, instance) for one request."""
+    """Return (status code or None, version) for one request."""
     try:
         with urlopen(url, timeout=timeout) as response:
             status, body = response.status, json.load(response)
@@ -23,13 +23,13 @@ def poll(url, timeout):
         except ValueError:
             body = {}
     except (OSError, ValueError) as error:
-        return None, "-", type(error).__name__
+        return None, type(error).__name__
     if not isinstance(body, dict):
         body = {}
-    return status, body.get("version", "-"), body.get("instance", "-")
+    return status, body.get("version", "-")
 
 
-def summarize(total, errors, versions, instances, started):
+def summarize(total, errors, versions, started):
     elapsed = time.monotonic() - started
     lines = [
         "",
@@ -44,21 +44,7 @@ def summarize(total, errors, versions, instances, started):
         (old, old_seen), (new, new_seen) = list(versions.items())[0], list(versions.items())[-1]
         lines.append("Primera respuesta de {}: {}   Ultima respuesta de {}: {}".format(
             new, new_seen["first"], old, old_seen["last"]))
-    lines += ["", "Instancias (respuestas, primera vez, ultima vez, versiones servidas):"]
-    for instance, seen in instances.items():
-        lines.append("  {:<22} {:>5}   {}   {}   {}".format(
-            instance, seen["count"], seen["first"], seen["last"], ", ".join(seen["versions"])))
-    lines.append("Total de instancias vistas: {}".format(len(instances)))
     return lines
-
-
-def track(seen, key, now):
-    """Record a sighting; return True the first time a key appears."""
-    if key not in seen:
-        seen[key] = {"count": 0, "first": now, "last": now, "versions": []}
-    seen[key]["count"] += 1
-    seen[key]["last"] = now
-    return seen[key]["count"] == 1
 
 
 def main():
@@ -72,33 +58,32 @@ def main():
     url = args.base_url.rstrip("/") + "/health"
     log = open(args.log, "a", encoding="utf-8") if args.log else None
     total = errors = 0
-    versions, instances = {}, {}
+    versions = {}
     started = time.monotonic()
     print("Monitoreando {} cada {} s. Ctrl+C para terminar.\n".format(url, args.interval))
     try:
         while True:
-            status, version, instance = poll(url, args.timeout)
+            status, version = poll(url, args.timeout)
             now = datetime.now().strftime("%H:%M:%S")
             total += 1
-            notes = []
+            note = ""
             if status != 200:
                 errors += 1
             else:
-                if track(versions, version, now) and len(versions) > 1:
-                    notes.append("nueva version")
-                if track(instances, instance, now):
-                    notes.append("primera vez de esta instancia")
-                if version not in instances[instance]["versions"]:
-                    instances[instance]["versions"].append(version)
-            line = "{}  {:>4}  {:<10}  {}{}".format(
-                now, status or "ERR", version, instance, "   <- " + ", ".join(notes) if notes else "")
+                if version not in versions:
+                    versions[version] = {"count": 0, "first": now}
+                    if len(versions) > 1:
+                        note = "   <- nueva version"
+                versions[version]["count"] += 1
+                versions[version]["last"] = now
+            line = "{}  {:>4}  {}{}".format(now, status or "ERR", version, note)
             print(line, flush=True)
             if log:
                 log.write(line + "\n")
                 log.flush()
             time.sleep(args.interval)
     except KeyboardInterrupt:
-        for line in summarize(total, errors, versions, instances, started):
+        for line in summarize(total, errors, versions, started):
             print(line)
             if log:
                 log.write(line + "\n")
