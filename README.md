@@ -87,8 +87,15 @@ Codificar el correo como componente de URL cuando contenga caracteres especiales
 ### GET /health
 
 Sin autenticacion. Comprueba conectividad con la base de datos: `200` con
-`{"status":"ok"}` o `503` con `{"status":"unavailable"}`.
+`status: "ok"` o `503` con `status: "unavailable"`.
 La ruta `/` ofrece el mismo chequeo.
+
+```json
+{"status": "ok", "version": "1.0.0"}
+```
+
+`version` es `APP_VERSION` de `app/version.py` y permite ver que version responde
+durante un despliegue.
 
 ## Pruebas
 
@@ -145,6 +152,26 @@ Adjuntar su URL al documento de entrega.
    estrategias, por ejemplo All at once, Rolling, Rolling with additional batch
    e Immutable. Registrar instancias, validacion, tiempo, reutilizacion o
    reemplazo de instancias, capturas y hallazgos para cada estrategia.
+
+### Monitoreo de una estrategia de despliegue
+
+1. Cambiar `APP_VERSION` en `app/version.py` (por ejemplo `1.0.0` a `1.0.1`).
+   Debe cambiar el codigo: modificar una variable de entorno es una actualizacion
+   de configuracion y no usa la politica de despliegue.
+2. Generar el ZIP con `scripts/package.py` y subirlo como nueva version.
+3. Iniciar el monitoreo antes de desplegar y detenerlo con `Ctrl+C` cuando
+   *Events* indique que el despliegue termino:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/watch_deploy.py http://<ambiente>.elasticbeanstalk.com --log despliegue.log
+```
+
+Cada linea muestra hora, codigo HTTP y version que respondio. El resumen final
+indica errores, cuando aparecio la nueva version y cuando respondio por ultima
+vez la anterior. Si las instancias eran nuevas o existentes se documenta con
+capturas de EC2 (ID y *Launch time*) y de la pestana *Health* del ambiente antes,
+durante y despues del despliegue. El tiempo total del despliegue se toma de
+*Events* en la consola.
 
 La configuracion no fija Auto Scaling ni las politicas de despliegue: se cambian
 manualmente en AWS como parte del ejercicio. Si falla `init-db`, revisar los logs

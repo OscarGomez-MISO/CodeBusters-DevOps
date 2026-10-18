@@ -8,6 +8,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from .extensions import db
 from .models import Blacklist
 from .schemas import blacklist_schema
+from .version import APP_VERSION
 
 
 class BlacklistCollection(Resource):
@@ -57,9 +58,10 @@ class BlacklistItem(Resource):
 
 class Health(Resource):
     def get(self):
+        # The version shows which deployment answered while a rollout is in progress.
         try:
             db.session.execute(text("SELECT 1"))
         except SQLAlchemyError:
             db.session.rollback()
-            return {"status": "unavailable"}, 503
-        return {"status": "ok"}, 200
+            return {"status": "unavailable", "version": APP_VERSION}, 503
+        return {"status": "ok", "version": APP_VERSION}, 200

@@ -6,6 +6,7 @@ from sqlalchemy.exc import OperationalError
 
 from app.extensions import db
 from app.models import Blacklist
+from app.version import APP_VERSION
 
 PAYLOAD = {
     "email": "person@example.com",
@@ -104,13 +105,16 @@ def test_forwarded_header_is_ignored_without_proxy_trust(app, client, auth):
 
 def test_health_database_failure(client):
     with patch.object(db.session, "execute", side_effect=OperationalError("SELECT 1", {}, Exception())):
-        assert client.get("/health").status_code == 503
+        response = client.get("/health")
+    assert response.status_code == 503
+    assert response.json == {"status": "unavailable", "version": APP_VERSION}
 
 
 def test_health_and_cli(app, client):
-    assert client.get("/health").json == {"status": "ok"}
+    assert client.get("/health").json == {"status": "ok", "version": APP_VERSION}
     runner = app.test_cli_runner()
     assert runner.invoke(args=["init-db"]).exit_code == 0
     result = runner.invoke(args=["generate-token"])
     assert result.exit_code == 0
     assert client.get("/blacklists/person@example.com", headers={"Authorization": "Bearer " + result.output.strip()}).status_code == 200
+
