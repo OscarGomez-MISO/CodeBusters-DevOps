@@ -90,6 +90,12 @@ Sin autenticacion. Comprueba conectividad con la base de datos: `200` con
 `{"status":"ok"}` o `503` con `{"status":"unavailable"}`.
 La ruta `/` ofrece el mismo chequeo.
 
+### GET /version
+
+Sin autenticacion. Devuelve `{"version":"2.0.0"}` para identificar la version
+modificada durante las pruebas de estrategias de despliegue. La version inicial
+del proyecto no incluia esta ruta y respondia `404`.
+
 ## Pruebas
 
 ```powershell

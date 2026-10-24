@@ -48,12 +48,13 @@ def create_app(test_config=None):
     ma.init_app(app)
     jwt.init_app(app)
 
-    from .resources import BlacklistCollection, BlacklistItem, Health
+    from .resources import BlacklistCollection, BlacklistItem, Health, Version
 
     api = JsonApi(app)
     api.add_resource(BlacklistCollection, "/blacklists")
     api.add_resource(BlacklistItem, "/blacklists/<string:email>")
     api.add_resource(Health, "/", "/health")
+    api.add_resource(Version, "/version")
 
     @jwt.unauthorized_loader
     def missing_token(reason):

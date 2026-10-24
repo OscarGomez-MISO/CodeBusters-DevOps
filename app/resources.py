@@ -63,3 +63,8 @@ class Health(Resource):
             db.session.rollback()
             return {"status": "unavailable"}, 503
         return {"status": "ok"}, 200
+
+
+class Version(Resource):
+    def get(self):
+        return {"version": "2.0.0"}, 200
