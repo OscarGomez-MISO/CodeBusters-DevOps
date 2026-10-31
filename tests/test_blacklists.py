@@ -47,8 +47,10 @@ def test_duplicate_is_case_insensitive(client, auth):
 
 @pytest.mark.parametrize("headers", [{}, {"Authorization": "Bearer invalid"}])
 @pytest.mark.parametrize("method,path", [("post", "/blacklists"), ("get", "/blacklists/person@example.com")])
-def test_authorization_required(client, headers, method, path):
+def test_authorization_required(app, client, headers, method, path):
     assert getattr(client, method)(path, headers=headers).status_code == 401
+    with app.app_context():
+        assert Blacklist.query.count() == 0
 
 
 @pytest.mark.parametrize("changes", [
@@ -56,15 +58,19 @@ def test_authorization_required(client, headers, method, path):
     {"app_uuid": None}, {"blocked_reason": "x" * 256}, {"blocked_reason": 123},
     {"unexpected": "field"},
 ])
-def test_invalid_payload(client, auth, changes):
+def test_invalid_payload(app, client, auth, changes):
     assert client.post("/blacklists", json=dict(PAYLOAD, **changes), headers=auth).status_code == 400
+    with app.app_context():
+        assert Blacklist.query.count() == 0
 
 
 @pytest.mark.parametrize("missing", ["email", "app_uuid"])
-def test_required_fields(client, auth, missing):
+def test_required_fields(app, client, auth, missing):
     payload = dict(PAYLOAD)
     del payload[missing]
     assert client.post("/blacklists", json=payload, headers=auth).status_code == 400
+    with app.app_context():
+        assert Blacklist.query.count() == 0
 
 
 @pytest.mark.parametrize("payload", [[], "string", None])

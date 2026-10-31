@@ -116,6 +116,29 @@ $env:POSTGRES_TEST_URL = "postgresql://blacklists:local-password@localhost:5432/
 Esta prueba crea un registro unico, comprueba su persistencia desde otra instancia
 de la aplicacion y elimina solo ese registro al finalizar.
 
+## Integracion continua - Entrega 2
+
+El flujo de AWS CodeBuild se define en `buildspec.yml`: instala dependencias con
+Python 3.11, ejecuta las pruebas y genera el ZIP si pasan. No realiza despliegues.
+
+Para ejecutar el mismo flujo localmente, sin Docker, RDS ni PostgreSQL:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/ci.py
+```
+
+Las pruebas usan SQLite en memoria y claves JWT exclusivas de pruebas. Los fallos
+de dependencias se simulan con mocks. `tests/test_postgres.py` se excluye de este
+flujo, aunque `POSTGRES_TEST_URL` este configurada en el equipo.
+
+Resultados: `reports/pytest.xml` (JUnit) y, solo si pasan las pruebas,
+`dist/blacklists.zip`. El flujo elimina el ZIP anterior antes de empezar para
+evitar publicar un artefacto viejo cuando falla una nueva ejecucion.
+
+La guia [Entrega 2 - CI en AWS](docs/Entrega-2-CI-AWS.md) contiene la configuracion
+del proyecto, el disparador GitHub, S3 y las evidencias para el informe. El equipo
+debe resolver la diferencia entre `master` (enunciado) y `main` (repositorio).
+
 ## Postman
 
 Importar `postman/Blacklists.postman_collection.json` y
