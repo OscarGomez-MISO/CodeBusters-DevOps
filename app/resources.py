@@ -36,7 +36,7 @@ class BlacklistCollection(Resource):
             "created": True,
             "message": "Email added to blacklist",
             "email": entry.email,
-        }, 201
+        }, 200
 
 
 class BlacklistItem(Resource):
