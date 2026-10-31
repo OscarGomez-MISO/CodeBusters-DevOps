@@ -136,8 +136,10 @@ Resultados: `reports/pytest.xml` (JUnit) y, solo si pasan las pruebas,
 evitar publicar un artefacto viejo cuando falla una nueva ejecucion.
 
 La guia [Entrega 2 - CI en AWS](docs/Entrega-2-CI-AWS.md) contiene la configuracion
-del proyecto, el disparador GitHub, S3 y las evidencias para el informe. El equipo
-debe resolver la diferencia entre `master` (enunciado) y `main` (repositorio).
+del proyecto, el disparador GitHub, S3 y las evidencias para el informe.
+La rama de integracion acordada para este proyecto es `main`. Configurar el
+webhook de CodeBuild con evento `PUSH` y filtro `HEAD_REF` igual a
+`^refs/heads/main$` para construir automaticamente los cambios publicados.
 
 ## Postman
 
