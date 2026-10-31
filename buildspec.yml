@@ -1,0 +1,25 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.11
+    commands:
+      - python -m pip install -r requirements-dev.txt
+      - python -m pip check
+  build:
+    commands:
+      - python scripts/ci.py
+
+reports:
+  pytest_reports:
+    files:
+      - pytest.xml
+    base-directory: reports
+    file-format: JUNITXML
+
+artifacts:
+  files:
+    - blacklists.zip
+  base-directory: dist
+  discard-paths: yes
