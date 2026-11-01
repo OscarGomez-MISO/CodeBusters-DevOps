@@ -50,7 +50,7 @@ class BlacklistItem(Resource):
         entry = Blacklist.query.filter_by(email=email).first()
         return {
             "email": email,
-            "is_blacklisted": entry is not None,
+            "is_blacklisted": entry is None,
             "blocked_reason": entry.blocked_reason if entry else None,
         }, 200
 
