@@ -42,7 +42,7 @@ class BlacklistCollection(Resource):
 class BlacklistItem(Resource):
     @jwt_required
     def get(self, email):
-        email = email.strip().lower()
+        email = email.strip()
         try:
             fields.Email(validate=validate.Length(max=254)).deserialize(email)
         except ValidationError:
