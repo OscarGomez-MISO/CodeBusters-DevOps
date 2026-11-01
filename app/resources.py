@@ -62,7 +62,7 @@ class Health(Resource):
         except SQLAlchemyError:
             db.session.rollback()
             return {"status": "unavailable"}, 503
-        return {"status": "healthy"}, 200
+        return {"status": "ok"}, 200
 
 
 class Version(Resource):
