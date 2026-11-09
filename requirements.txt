@@ -14,3 +14,4 @@ Flask-JWT-Extended==3.25.1
 PyJWT==1.7.1
 psycopg2-binary==2.9.11
 python-dotenv==1.0.1
+gunicorn==26.2.0

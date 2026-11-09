@@ -9,6 +9,10 @@ Flask-JWT-Extended, Werkzeug y PostgreSQL. No requiere interfaz grafica.
 Se recomienda Python 3.11 para este conjunto de dependencias de Flask 1.1.x.
 Las versiones estan fijadas para conservar la compatibilidad del stack solicitado.
 
+Para la Entrega 3, consultar [Contenedor local con SQLite](docs/Entrega-3-Contenedor-Local.md).
+Permite probar la imagen Docker sin PostgreSQL, RDS ni una cuenta AWS.
+El procedimiento siguiente conserva el desarrollo local con PostgreSQL.
+
 ```powershell
 py -3.11 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
