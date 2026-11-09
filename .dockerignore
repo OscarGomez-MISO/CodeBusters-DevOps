@@ -1,0 +1,10 @@
+# Only send runtime inputs to the builder; never send local secrets or artifacts.
+**
+!Dockerfile
+!requirements.txt
+!application.py
+!app/
+app/**
+!app/**/*.py
+**/__pycache__/
+**/*.py[cod]
