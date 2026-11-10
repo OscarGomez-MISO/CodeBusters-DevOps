@@ -103,7 +103,7 @@ echo "Cuenta: ********${ACCOUNT_ID: -4} | Region: $AWS_REGION | Prefijo: $PREFIX
 
 Ejemplo de la cuenta del Integrante 2. Los identificadores son de esa cuenta: no copiarlos.
 
-![S2-01](capturas/S2-01-parametros-cloudshell.png)
+![S2-01](img/entrega3/S2-01-parametros-cloudshell.png)
 
 *Figura S2-01. Parámetros cargados en CloudShell; la cuenta se muestra solo con sus últimos cuatro dígitos.*
 
@@ -175,19 +175,19 @@ Evidencia: Reglas de entrada de `${PREFIX}-task-sg` y `${PREFIX}-rds-sg`.
 
 Ejemplo de la cuenta del Integrante 2. Los identificadores son de esa cuenta: no copiarlos.
 
-![S3-01](capturas/S3-01-red-y-security-groups-cloudshell.png)
+![S3-01](img/entrega3/S3-01-red-y-security-groups-cloudshell.png)
 
 *Figura S3-01. VPC por defecto, subnets públicas, security groups creados y sus reglas de entrada.*
 
-![S3-02](capturas/S3-02-sg-tareas-reglas-entrada.png)
+![S3-02](img/entrega3/S3-02-sg-tareas-reglas-entrada.png)
 
 *Figura S3-02. Security group de las tareas: entrada TCP 5000 solo desde el grupo del ALB.*
 
-![S3-03](capturas/S3-03-sg-rds-reglas-entrada.png)
+![S3-03](img/entrega3/S3-03-sg-rds-reglas-entrada.png)
 
 *Figura S3-03. Security group de RDS: entrada PostgreSQL 5432 solo desde el grupo de las tareas.*
 
-![S3-04](capturas/S3-04-sg-alb-reglas-entrada.png)
+![S3-04](img/entrega3/S3-04-sg-alb-reglas-entrada.png)
 
 *Figura S3-04. Security group del ALB: entrada HTTP 80 desde internet.*
 
@@ -233,15 +233,15 @@ aws logs put-retention-policy --log-group-name $LOG_GROUP --retention-in-days 7
 
 Ejemplo de la cuenta del Integrante 2. Los identificadores son de esa cuenta: no copiarlos.
 
-![S4-01](capturas/S4-01-rol-y-logs-cloudshell.png)
+![S4-01](img/entrega3/S4-01-rol-y-logs-cloudshell.png)
 
 *Figura S4-01. Rol de ejecución, sus políticas y el grupo de logs, verificados desde CloudShell.*
 
-![S4-02](capturas/S4-02-rol-ejecucion-permisos.png)
+![S4-02](img/entrega3/S4-02-rol-ejecucion-permisos.png)
 
 *Figura S4-02. Rol de ejecución en IAM con la política administrada y la política en línea de SSM.*
 
-![S4-03](capturas/S4-03-grupo-de-logs-retencion.png)
+![S4-03](img/entrega3/S4-03-grupo-de-logs-retencion.png)
 
 *Figura S4-03. Grupo de logs con retención de una semana.*
 
@@ -288,15 +288,15 @@ Evidencia: RDS disponible, con **Acceso público: No** y el security group asoci
 
 Ejemplo de la cuenta del Integrante 2. Los identificadores son de esa cuenta: no copiarlos.
 
-![S5-01](capturas/S5-01-rds-y-secretos-cloudshell.png)
+![S5-01](img/entrega3/S5-01-rds-y-secretos-cloudshell.png)
 
 *Figura S5-01. Creación de la instancia, guardado de los secretos y verificación del cifrado. En esta cuenta la instancia se recreó para activar el cifrado, por eso aparece un borrado previo.*
 
-![S5-02](capturas/S5-02-rds-disponible.png)
+![S5-02](img/entrega3/S5-02-rds-disponible.png)
 
 *Figura S5-02. Instancia disponible, con el cifrado habilitado.*
 
-![S5-03](capturas/S5-03-rds-security-group.png)
+![S5-03](img/entrega3/S5-03-rds-security-group.png)
 
 *Figura S5-03. Reglas del security group de la instancia: entrada solo desde el grupo de las tareas.*
 
@@ -323,7 +323,7 @@ Los valores nunca van en la imagen, el repositorio, la task definition ni el inf
 
 Ejemplo de la cuenta del Integrante 2. Los identificadores son de esa cuenta: no copiarlos.
 
-![S6-01](capturas/S6-01-parametros-ssm.png)
+![S6-01](img/entrega3/S6-01-parametros-ssm.png)
 
 *Figura S6-01. Los dos parámetros `SecureString` en Parameter Store. La tabla no muestra los valores.*
 
@@ -379,11 +379,11 @@ Registrar el SHA y el digest.
 
 Ejemplo de la cuenta del Integrante 2. Los identificadores son de esa cuenta: no copiarlos.
 
-![S7-01](capturas/S7-01-imagen-ecr-cloudshell.png)
+![S7-01](img/entrega3/S7-01-imagen-ecr-cloudshell.png)
 
 *Figura S7-01. Construcción, inspección y publicación de la imagen desde CloudShell, con el SHA del commit y el digest.*
 
-![S7-02](capturas/S7-02-imagen-en-ecr.png)
+![S7-02](img/entrega3/S7-02-imagen-en-ecr.png)
 
 *Figura S7-02. Imagen en el repositorio de ECR, etiquetada con el SHA del commit.*
 
@@ -442,15 +442,15 @@ Evidencia: Health check de un target group (`/health`, 200) y listener en el pue
 
 Ejemplo de la cuenta del Integrante 2. Los identificadores son de esa cuenta: no copiarlos.
 
-![S8-01](capturas/S8-01-alb-target-groups-cloudshell.png)
+![S8-01](img/entrega3/S8-01-alb-target-groups-cloudshell.png)
 
 *Figura S8-01. Balanceador activo, los dos target groups con health check `/health`, el listener del puerto 80 y la prueba que responde 503 sin tareas.*
 
-![S8-02](capturas/S8-02-target-groups.png)
+![S8-02](img/entrega3/S8-02-target-groups.png)
 
 *Figura S8-02. Target groups de tipo IP en el puerto 5000; solo el blue está asociado al balanceador.*
 
-![S8-03](capturas/S8-03-balanceador-activo.png)
+![S8-03](img/entrega3/S8-03-balanceador-activo.png)
 
 *Figura S8-03. Balanceador activo, expuesto a internet, en dos zonas.*
 
@@ -517,15 +517,15 @@ El comando de arranque (`gunicorn --bind 0.0.0.0:5000 application:application`) 
 
 Ejemplo de la cuenta del Integrante 2. Los identificadores son de esa cuenta: no copiarlos.
 
-![S9-01](capturas/S9-01-cluster-taskdef-y-error-rol-servicio.png)
+![S9-01](img/entrega3/S9-01-cluster-taskdef-y-error-rol-servicio.png)
 
 *Figura S9-01. Cluster creado y task definition registrada. El error final es el del rol vinculado al servicio, que se resuelve esperando un minuto (ver sección 10).*
 
-![S9-02](capturas/S9-02-task-definition-consola.png)
+![S9-02](img/entrega3/S9-02-task-definition-consola.png)
 
 *Figura S9-02. Task definition en la consola: Fargate, Linux/X86_64, `awsvpc`, 0,25 vCPU y 512 MiB.*
 
-![S9-03](capturas/S9-03-task-definition-contenedor-secretos.png)
+![S9-03](img/entrega3/S9-03-task-definition-contenedor-secretos.png)
 
 *Figura S9-03. Detalle del contenedor: `DATABASE_URL` y `JWT_SECRET_KEY` aparecen como `valueFrom` con el ARN del parámetro, no con su valor.*
 
@@ -576,7 +576,7 @@ Evidencia: Tarea detenida con código de salida 0 y sus logs.
 
 Ejemplo de la cuenta del Integrante 2. Los identificadores son de esa cuenta: no copiarlos.
 
-![S10-01](capturas/S10-01-init-db-codigo-0.png)
+![S10-01](img/entrega3/S10-01-init-db-codigo-0.png)
 
 *Figura S10-01. Tarea `init-db`: ciclo de estados, código de salida 0 y log `Database tables ready.`*
 
@@ -607,11 +607,11 @@ Puntos a tener presentes:
 
 Ejemplo de la cuenta del Integrante 2. Los identificadores son de esa cuenta: no copiarlos.
 
-![S11-01](capturas/S11-01-servicio-healthy-cloudshell.png)
+![S11-01](img/entrega3/S11-01-servicio-healthy-cloudshell.png)
 
 *Figura S11-01. Servicio creado, destino `healthy`, respuestas 200 de `/health` y `/version`, y conteo final 1 de 1.*
 
-![S11-02](capturas/S11-02-servicio-ecs-consola.png)
+![S11-02](img/entrega3/S11-02-servicio-ecs-consola.png)
 
 *Figura S11-02. Servicio activo en la consola, con 1 tarea en ejecución y 1 destino sano en el target group blue.*
 
@@ -713,15 +713,15 @@ echo "URL:                http://$ALB_DNS"
 
 Ejemplo de la cuenta del Integrante 2. Los identificadores son de esa cuenta: no copiarlos.
 
-![S12-01](capturas/S12-01-postman-runner-escenarios-1-5.png)
+![S12-01](img/entrega3/S12-01-postman-runner-escenarios-1-5.png)
 
 *Figura S12-01. Runner de Postman contra el ALB: 7 pruebas, 0 errores, y escenarios 1 a 5.*
 
-![S12-02](capturas/S12-02-postman-runner-escenarios-3-7.png)
+![S12-02](img/entrega3/S12-02-postman-runner-escenarios-3-7.png)
 
 *Figura S12-02. Escenarios 3 a 7, incluidos el UUID inválido (400) y la solicitud sin token (401).*
 
-![S12-03](capturas/S12-03-postman-historial-ejecuciones.png)
+![S12-03](img/entrega3/S12-03-postman-historial-ejecuciones.png)
 
 *Figura S12-03. Historial de ejecuciones de la colección.*
 
