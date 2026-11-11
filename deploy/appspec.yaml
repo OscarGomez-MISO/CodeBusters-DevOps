@@ -1,0 +1,17 @@
+# AppSpec para el despliegue Blue/Green de ECS con CodeDeploy (Entrega 3).
+#
+# La accion CodeDeployToECS de CodePipeline reemplaza <TASK_DEFINITION> por el
+# ARN de la revision que registra a partir de taskdef.json. No escribir aqui un
+# ARN real: este archivo es igual para las cuatro cuentas.
+#
+# El contenedor y el puerto deben coincidir con la task definition, el servicio
+# ECS y los target groups: contenedor "blacklists", puerto 5000.
+version: 0.0
+Resources:
+  - TargetService:
+      Type: AWS::ECS::Service
+      Properties:
+        TaskDefinition: <TASK_DEFINITION>
+        LoadBalancerInfo:
+          ContainerName: "blacklists"
+          ContainerPort: 5000
