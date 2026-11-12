@@ -1,0 +1,38 @@
+{
+  "family": "${TASK_FAMILY}",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "runtimePlatform": {
+    "operatingSystemFamily": "LINUX",
+    "cpuArchitecture": "X86_64"
+  },
+  "executionRoleArn": "${EXEC_ROLE_ARN}",
+  "containerDefinitions": [
+    {
+      "name": "blacklists",
+      "image": "<IMAGE1_NAME>",
+      "essential": true,
+      "portMappings": [
+        {"containerPort": 5000, "protocol": "tcp"}
+      ],
+      "environment": [
+        {"name": "TRUST_PROXY_HEADERS", "value": "true"},
+        {"name": "PROXY_HOPS", "value": "1"}
+      ],
+      "secrets": [
+        {"name": "DATABASE_URL", "valueFrom": "${SSM_DB_ARN}"},
+        {"name": "JWT_SECRET_KEY", "valueFrom": "${SSM_JWT_ARN}"}
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "${LOG_GROUP}",
+          "awslogs-region": "${AWS_REGION}",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}
