@@ -1,0 +1,57 @@
+# Build de CD (Entrega 3): pruebas -> imagen en ECR -> artefactos para CodeDeployToECS.
+#
+# Se ejecuta solo como etapa Build de CodePipeline (origen CODEPIPELINE, sin webhook).
+# El proyecto CodeBuild necesita modo privilegiado (Docker) y estas variables,
+# propias de cada cuenta (ver docs/Entrega-3-CodeBuild-ECR.md):
+#   ECR_URI, TASK_FAMILY, EXEC_ROLE_ARN, SSM_DB_ARN, SSM_JWT_ARN, LOG_GROUP
+# AWS_REGION y CODEBUILD_RESOLVED_SOURCE_VERSION los aporta CodeBuild.
+#
+# Todo va en una sola fase: CodeBuild detiene la fase en el primer comando que
+# falla, asi que si una prueba falla no se construye ni publica la imagen y no
+# se generan artefactos de despliegue.
+version: 0.2
+
+env:
+  shell: bash
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.11
+    commands:
+      - python -m pip install -r requirements-dev.txt
+      - python -m pip check
+  build:
+    commands:
+      - export GIT_SHA="${CODEBUILD_RESOLVED_SOURCE_VERSION}"
+      - export IMAGE_URI="${ECR_URI}:${GIT_SHA}"
+      - echo "Commit ${GIT_SHA}"
+      # 1. Pruebas unitarias con reporte JUnit (sin RDS ni secretos)
+      - mkdir -p reports
+      - python -m pytest -q --ignore=tests/test_postgres.py --junitxml=reports/pytest.xml
+      # 2. Imagen base desde la copia de Docker Hub en ECR Public (evita el limite de descargas anonimas)
+      - BASE_IMAGE=$(awk 'toupper($1)=="FROM"{print $2; exit}' Dockerfile)
+      - docker pull "public.ecr.aws/docker/library/${BASE_IMAGE}"
+      - docker tag "public.ecr.aws/docker/library/${BASE_IMAGE}" "${BASE_IMAGE}"
+      # 3. Construir y publicar la imagen con el SHA completo como tag
+      - aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${ECR_URI%%/*}"
+      - docker build --platform linux/amd64 -t "${IMAGE_URI}" .
+      - docker push "${IMAGE_URI}" > /dev/null
+      - echo "Digest $(docker inspect --format '{{index .RepoDigests 0}}' "${IMAGE_URI}" | cut -d@ -f2)"
+      # 4. Artefactos de CD: taskdef.json, appspec.yaml, imageDetail.json
+      - python scripts/prepare_cd.py
+
+reports:
+  pytest_reports:
+    files:
+      - pytest.xml
+    base-directory: reports
+    file-format: JUNITXML
+
+artifacts:
+  files:
+    - taskdef.json
+    - appspec.yaml
+    - imageDetail.json
+  base-directory: dist/cd
+  discard-paths: yes
