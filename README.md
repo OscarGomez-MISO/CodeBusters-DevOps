@@ -154,10 +154,38 @@ La coleccion incluye creacion, consulta, duplicado, correo ausente, validacion,
 rechazo sin token y health check. Ejecutarla en orden; genera un correo unico
 para evitar duplicados entre ejecuciones.
 
-Para AWS crear un ambiente con `base_url` igual al dominio Beanstalk y un token
-firmado con la clave del ambiente. En Postman, compartir la coleccion en el
-workspace del equipo, guardar ejemplos de respuesta y publicar la documentacion.
-Adjuntar su URL al documento de entrega.
+Para evaluar la entrega 3, importar
+`postman/AWS-Entrega-3.postman_environment.json` y seleccionar
+`Blacklists - AWS Entrega 3 (Oscar)`. El ALB compartido es
+http://cb-e3-i1-alb-459215994.us-east-1.elb.amazonaws.com.
+La coleccion tambien incluye esta URL como valor predeterminado; seleccionar el
+environment local la reemplaza por localhost. No reemplazar las rutas
+`{{base_url}}` de cada solicitud por direcciones fijas.
+
+Configurar el JWT del ambiente AWS solo como valor local de `token`, manteniendo
+su valor compartido vacio. El tutor debe recibirlo por un canal privado para
+probar `/blacklists`; `/health` y `/version` no requieren token. No publicar
+`JWT_SECRET_KEY` ni tokens en ejemplos, capturas, exports o documentacion.
+La marca de variable sensible no sustituye dejar el valor compartido vacio.
+El ALB del laboratorio usa HTTP: trabajar solo con datos de prueba.
+
+Para actualizar la documentacion ya publicada, editar la misma coleccion en
+Postman (sin borrarla ni crear otra publicacion): actualizar su descripcion y
+sus variables con los valores del JSON del repositorio. Importar el environment
+AWS y compartir unicamente `base_url` y `app_uuid`. Desde Overview > View complete
+documentation > Docs published > Edit published documentation > Edit Settings,
+seleccionar el environment AWS, revisar Preview Documentation y finalizar con
+Save and republish. Si es la primera publicacion, usar Publish docs > Postman >
+Publish en lugar de Docs published.
+Comprobar en una ventana privada que la URL mostrada es la del ALB y no hay
+credenciales. Los cambios de la coleccion publicada se sincronizan; cambiar
+solo el environment activo del Runner no cambia el environment publicado.
+Adjuntar el enlace publico al informe.
+
+Mantener el ambiente AWS hasta la calificacion implica consumo y posibles
+cargos. Confirmar la fecha de cierre con el tutor y aplicar despues
+`docs/Entrega-3-Limpieza-AWS.md`; no eliminar ALB, servicio, RDS ni parametros
+mientras se necesite la verificacion.
 
 ## Despliegue manual en Elastic Beanstalk
 
