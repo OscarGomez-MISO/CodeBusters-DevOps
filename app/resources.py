@@ -67,4 +67,4 @@ class Health(Resource):
 
 class Version(Resource):
     def get(self):
-        return {"version": "2.0.0"}, 200
+        return {"version": "2.1.0"}, 200
