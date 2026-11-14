@@ -227,3 +227,7 @@ __marimo__/
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
+
+# Local coding-agent instructions
+/AGENTS.md
+/CLAUDE.md
