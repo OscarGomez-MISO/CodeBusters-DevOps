@@ -24,4 +24,4 @@ USER 10001:10001
 
 EXPOSE 5000
 
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "1", "--access-logfile", "-", "--error-logfile", "-", "--no-control-socket", "application:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5001", "--workers", "1", "--access-logfile", "-", "--error-logfile", "-", "--no-control-socket", "application:application"]
