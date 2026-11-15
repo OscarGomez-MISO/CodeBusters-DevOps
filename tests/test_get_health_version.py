@@ -136,7 +136,7 @@ def test_version_without_authentication(client):
     response = client.get("/version")
     assert response.status_code == 200
     assert response.is_json
-    assert response.json == {"version": "2.1.0"}
+    assert response.json == {"version": "2.2.0"}
 
 
 def test_version_rejects_unsupported_method(client):
