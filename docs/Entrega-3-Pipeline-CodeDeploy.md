@@ -136,7 +136,7 @@ for color in blue green; do
     --namespace AWS/ApplicationELB --metric-name UnHealthyHostCount \
     --dimensions Name=TargetGroup,Value=${TG_ARN##*:} Name=LoadBalancer,Value=$ALB_DIM \
     --statistic Maximum --period 60 \
-    --evaluation-periods 2 --datapoints-to-alarm 2 \
+    --evaluation-periods 1 --datapoints-to-alarm 1 \
     --threshold 1 --comparison-operator GreaterThanOrEqualToThreshold \
     --treat-missing-data notBreaching
 done
@@ -146,6 +146,10 @@ aws cloudwatch describe-alarms --alarm-name-prefix ${PREFIX}-tg- \
 ```
 
 Se vigilan los dos target groups porque se alternan en cada despliegue: el que hoy recibe tráfico es el próximo libre. Las dos alarmas deben quedar en `OK` (o `INSUFFICIENT_DATA` los primeros minutos). **Si una alarma está en `ALARM` al iniciar un despliegue, CodeDeploy lo detiene de inmediato**: antes de cada escenario comprobar que estén en `OK`.
+
+**Por qué un solo período.** Las métricas del ALB llegan a CloudWatch con 2 a 4 minutos de retraso. CodeDeploy solo vigila las alarmas mientras el despliegue está en curso, y con `ECSAllAtOnce` el despliegue termina 5 minutos después de mover el tráfico. Con 2 de 2 períodos la alarma puede llegar tarde: en la cuenta del Integrante 4 pasó a `ALARM` 12 s después de que CodeDeploy diera por exitoso un despliegue roto (caso C), y el servicio quedó respondiendo 502 sin rollback. Con 1 de 1 período la alarma se activó unos 3 minutos después del cambio de tráfico, dentro de la ventana, y CodeDeploy detuvo el despliegue e hizo rollback.
+
+Si ya se crearon las alarmas con 2 de 2, basta con volver a ejecutar el bloque anterior: `put-metric-alarm` actualiza una alarma existente con el mismo nombre.
 
 ### 3.4 Grupo de despliegue
 
@@ -715,6 +719,7 @@ Cuidados al capturar: igual que la guía manual. Tapar el ID de cuenta y los ARN
 | `The ECS service cannot be found` / contenedor no coincide | Nombre de contenedor o puerto distinto de `blacklists` / `5000` en task definition o AppSpec |
 | Despliegue detenido al empezar | Una alarma estaba en `ALARM` al iniciar |
 | Despliegue tarda mucho y termina en timeout | Alarmas no configuradas en el grupo; revisar sección 3.3 |
+| Despliegue `Succeeded` pero el servicio responde 502 y la alarma pasa a `ALARM` minutos después | La alarma se activó después de los 5 minutos de espera. Usar 1 de 1 período (sección 3.3) y recuperar con commit correctivo o revert. Si la alarma sigue en `ALARM`, detendrá también la recuperación: esperar a que vuelva a `OK` o desactivar temporalmente el monitoreo de alarmas del grupo y reactivarlo al terminar |
 | `Deployment group's ECS service must be configured for CODE_DEPLOY` | El servicio no se creó con `--deployment-controller type=CODE_DEPLOY` (guía manual, sección 11) |
 
 ---
