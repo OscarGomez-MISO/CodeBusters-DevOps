@@ -1,7 +1,9 @@
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
+from uuid import uuid4
 
 from flask_jwt_extended import create_access_token
+import jwt as pyjwt
 import pytest
 from sqlalchemy.exc import OperationalError
 
@@ -45,7 +47,7 @@ def test_rejects_untrusted_token_without_inserting(app, client, token_case):
         if token_case == "expired":
             token = create_access_token(identity="test-client", expires_delta=timedelta(seconds=-60))
         else:
-            with patch.dict(app.config, {"JWT_SECRET_KEY": "another-test-key"}):
+            with patch.dict(app.config, {"JWT_SECRET_KEY": "another-test-key-not-for-production"}):
                 token = create_access_token(identity="test-client")
     response = client.post("/blacklists", json=PAYLOAD,
                            headers={"Authorization": "Bearer " + token})
@@ -63,3 +65,43 @@ def test_failed_commit_rolls_back_and_allows_next_request(app, client, auth):
     with app.app_context():
         assert Blacklist.query.count() == 0
     assert client.post("/blacklists", json=PAYLOAD, headers=auth).status_code == 201
+
+
+def _legacy_claims():
+    now = int(datetime.now(timezone.utc).timestamp())
+    return {
+        "identity": "blacklists-client", "type": "access", "fresh": False,
+        "jti": str(uuid4()), "iat": now, "nbf": now, "user_claims": {},
+    }
+
+
+def test_accepts_legacy_identity_tokens_signed_with_the_same_key(app, client):
+    token = pyjwt.encode(_legacy_claims(), app.config["JWT_SECRET_KEY"], algorithm="HS256")
+    auth = {"Authorization": "Bearer " + token}
+    assert client.post("/blacklists", json=PAYLOAD, headers=auth).status_code == 201
+    assert client.get("/blacklists/person@example.com", headers=auth).json["is_blacklisted"] is True
+
+
+def test_generated_tokens_preserve_identity_and_non_expiring_contract(app, client):
+    result = app.test_cli_runner().invoke(args=["generate-token"])
+    assert result.exit_code == 0
+    claims = pyjwt.decode(result.output.strip(), app.config["JWT_SECRET_KEY"], algorithms=["HS256"])
+    assert claims["identity"] == "blacklists-client"
+    assert "exp" not in claims
+    assert "sub" not in claims
+    assert client.get("/blacklists/absent@example.com", headers={
+        "Authorization": "Bearer " + result.output.strip(),
+    }).status_code == 200
+
+
+@pytest.mark.parametrize("algorithm", ["none", "HS384", "HS512"])
+def test_rejects_unapproved_signing_algorithms_without_writing(app, client, algorithm):
+    # Use a long fixture for every HMAC variant, never a deployment credential.
+    key = None if algorithm == "none" else "unapproved-algorithm-test-key-only-" * 2
+    with patch.dict(app.config, {"JWT_SECRET_KEY": key or "unit-test-secret-only-not-for-production"}):
+        token = pyjwt.encode(_legacy_claims(), key, algorithm=algorithm)
+        response = client.post("/blacklists", json=PAYLOAD, headers={"Authorization": "Bearer " + token})
+        assert response.status_code == 401
+        assert response.json == {"message": "Invalid Bearer token"}
+    with app.app_context():
+        assert Blacklist.query.count() == 0

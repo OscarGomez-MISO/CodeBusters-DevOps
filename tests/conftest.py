@@ -10,7 +10,7 @@ def app():
     app = create_app({
         "TESTING": True,
         "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
-        "JWT_SECRET_KEY": "test-secret-only",
+        "JWT_SECRET_KEY": "unit-test-secret-only-not-for-production",
         "TRUST_PROXY_HEADERS": False,
         "NEW_RELIC_ENABLED": False,
         "OBS_LAB_ENABLED": False,

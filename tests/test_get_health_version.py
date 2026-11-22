@@ -89,7 +89,7 @@ def test_get_rejects_untrusted_token(app, client, token_case):
         if token_case == "expired":
             token = create_access_token(identity="test-client", expires_delta=timedelta(seconds=-60))
         else:
-            with patch.dict(app.config, {"JWT_SECRET_KEY": "another-test-key"}):
+            with patch.dict(app.config, {"JWT_SECRET_KEY": "another-test-key-not-for-production"}):
                 token = create_access_token(identity="test-client")
     response = client.get("/blacklists/person@example.com",
                           headers={"Authorization": "Bearer " + token})

@@ -1,13 +1,16 @@
 # CodeBusters-DevOps
 
 Microservicio de lista negra global de correos para la primera entrega de DevOps.
-Implementa Python, Flask 1.1.4, SQLAlchemy, Flask-RESTful, Marshmallow,
+Implementa Python, Flask 3.1.3, SQLAlchemy, Flask-RESTful, Marshmallow,
 Flask-JWT-Extended, Werkzeug y PostgreSQL. No requiere interfaz grafica.
 
 ## Desarrollo local (PowerShell)
 
-Se recomienda Python 3.11 para este conjunto de dependencias de Flask 1.1.x.
-Las versiones estan fijadas para conservar la compatibilidad del stack solicitado.
+Se usa Python 3.11 con versiones fijadas y verificadas en conjunto. La rama de
+seguridad de la Entrega 4 migra el stack original de Flask 1.1.4 a Flask 3.1.3;
+conserva los endpoints, el esquema de datos y el claim JWT `identity` anterior.
+Los resultados y limites de esta migracion estan en la seccion 10 de la guia
+de New Relic local. Esta actualizacion no implica que AWS ya este desplegado.
 
 Para la Entrega 3, consultar [Contenedor local con SQLite](docs/Entrega-3-Contenedor-Local.md).
 Permite probar la imagen Docker sin PostgreSQL, RDS ni una cuenta AWS.

@@ -37,7 +37,7 @@ def configure_observability(app):
     last_error_at = None
 
     @app.route("/observability/error", methods=["POST"])
-    @jwt_required
+    @jwt_required()
     def controlled_error():
         nonlocal last_error_at
         with lock:

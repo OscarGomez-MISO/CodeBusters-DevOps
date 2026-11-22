@@ -11,7 +11,7 @@ from app import create_app
 def lab_app():
     return create_app({
         "TESTING": True, "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
-        "JWT_SECRET_KEY": "lab-test-key-only", "NEW_RELIC_ENABLED": True,
+        "JWT_SECRET_KEY": "lab-test-key-only-not-for-production", "NEW_RELIC_ENABLED": True,
         "OBS_LAB_ENABLED": True, "TRUST_PROXY_HEADERS": False,
     })
 

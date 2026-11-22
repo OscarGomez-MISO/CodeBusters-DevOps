@@ -44,7 +44,7 @@ def test_real_agent_names_requests_with_an_offline_collector(tmp_path):
         encoding="utf-8",
     )
     env = dict(os.environ, DATABASE_URL="sqlite:///:memory:",
-               JWT_SECRET_KEY="offline-sdk-test-only", NEW_RELIC_ENABLED="true",
+               JWT_SECRET_KEY="offline-sdk-test-only-not-for-production", NEW_RELIC_ENABLED="true",
                NEW_RELIC_LICENSE_KEY="0" * 40, NEW_RELIC_APP_NAME="cb-e4-offline-test",
                NEW_RELIC_CONFIG_FILE=str(config), NEW_RELIC_MONITOR_MODE="false",
                NEW_RELIC_DEVELOPER_MODE="true", OBS_LAB_ENABLED="true",

@@ -30,6 +30,10 @@ def create_app(test_config=None):
         SQLALCHEMY_ENGINE_OPTIONS={"pool_pre_ping": True},
         JWT_SECRET_KEY=os.getenv("JWT_SECRET_KEY", ""),
         JWT_ACCESS_TOKEN_EXPIRES=False,
+        # Keep the claim used by tokens issued before the JWT extension upgrade.
+        JWT_IDENTITY_CLAIM="identity",
+        JWT_ALGORITHM="HS256",
+        JWT_DECODE_ALGORITHMS=["HS256"],
         MAX_CONTENT_LENGTH=16 * 1024,
         TRUST_PROXY_HEADERS=os.getenv("TRUST_PROXY_HEADERS", "false").lower() == "true",
         PROXY_HOPS=int(os.getenv("PROXY_HOPS", "2")),
@@ -70,7 +74,7 @@ def create_app(test_config=None):
         return jsonify(message="Invalid Bearer token"), 401
 
     @jwt.expired_token_loader
-    def expired_token(token):
+    def expired_token(jwt_header, jwt_payload):
         return jsonify(message="Expired Bearer token"), 401
 
     @app.errorhandler(HTTPException)

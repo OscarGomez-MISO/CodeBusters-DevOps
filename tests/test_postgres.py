@@ -14,8 +14,9 @@ def test_postgres_persistence_across_app_instances():
     config = {
         "TESTING": True,
         "SQLALCHEMY_DATABASE_URI": os.getenv("POSTGRES_TEST_URL"),
-        "JWT_SECRET_KEY": "postgres-integration-test-key",
+        "JWT_SECRET_KEY": "postgres-integration-test-key-not-for-production",
         "TRUST_PROXY_HEADERS": True,
+        "PROXY_HOPS": 2,
     }
     app = create_app(config)
     email = "integration-{}@example.com".format(uuid4())

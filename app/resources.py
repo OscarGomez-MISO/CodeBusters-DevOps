@@ -11,7 +11,7 @@ from .schemas import blacklist_schema
 
 
 class BlacklistCollection(Resource):
-    @jwt_required
+    @jwt_required()
     def post(self):
         if not request.is_json:
             return {"message": "Content-Type must be application/json"}, 415
@@ -40,7 +40,7 @@ class BlacklistCollection(Resource):
 
 
 class BlacklistItem(Resource):
-    @jwt_required
+    @jwt_required()
     def get(self, email):
         email = email.strip().lower()
         try:
