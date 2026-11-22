@@ -231,3 +231,6 @@ __marimo__/
 # Local coding-agent instructions
 /AGENTS.md
 /CLAUDE.md
+
+# Private local New Relic runtime configuration
+/.env.newrelic

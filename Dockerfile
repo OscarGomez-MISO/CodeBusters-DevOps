@@ -19,9 +19,11 @@ RUN python -m pip install --no-cache-dir -r requirements.txt \
 
 COPY --chown=blacklists:blacklists application.py ./
 COPY --chown=blacklists:blacklists app/ ./app/
+COPY --chown=blacklists:blacklists newrelic.ini ./
+COPY --chown=blacklists:blacklists scripts/start.py ./scripts/start.py
 
 USER 10001:10001
 
 EXPOSE 5000
 
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "1", "--access-logfile", "-", "--error-logfile", "-", "--no-control-socket", "application:application"]
+CMD ["python", "scripts/start.py"]

@@ -33,6 +33,8 @@ def create_app(test_config=None):
         MAX_CONTENT_LENGTH=16 * 1024,
         TRUST_PROXY_HEADERS=os.getenv("TRUST_PROXY_HEADERS", "false").lower() == "true",
         PROXY_HOPS=int(os.getenv("PROXY_HOPS", "2")),
+        NEW_RELIC_ENABLED=os.getenv("NEW_RELIC_ENABLED", "false").strip().lower() == "true",
+        OBS_LAB_ENABLED=os.getenv("OBS_LAB_ENABLED", "false").strip().lower() == "true",
     )
     if test_config:
         app.config.update(test_config)
@@ -55,6 +57,9 @@ def create_app(test_config=None):
     api.add_resource(BlacklistItem, "/blacklists/<string:email>")
     api.add_resource(Health, "/", "/health")
     api.add_resource(Version, "/version")
+
+    from .observability import configure_observability
+    configure_observability(app)
 
     @jwt.unauthorized_loader
     def missing_token(reason):

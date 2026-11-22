@@ -3,6 +3,10 @@
 !Dockerfile
 !requirements.txt
 !application.py
+!newrelic.ini
+!scripts/
+scripts/**
+!scripts/start.py
 !app/
 app/**
 !app/**/*.py

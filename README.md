@@ -11,6 +11,9 @@ Las versiones estan fijadas para conservar la compatibilidad del stack solicitad
 
 Para la Entrega 3, consultar [Contenedor local con SQLite](docs/Entrega-3-Contenedor-Local.md).
 Permite probar la imagen Docker sin PostgreSQL, RDS ni una cuenta AWS.
+Para la Entrega 4, consultar [New Relic local](docs/Entrega-4-NewRelic-Local.md).
+La instrumentacion es optativa: se activa en runtime, sin cambiar el puerto ni
+guardar licencias en la imagen. Las pruebas siguen usando SQLite y mocks.
 El procedimiento siguiente conserva el desarrollo local con PostgreSQL.
 
 ```powershell
