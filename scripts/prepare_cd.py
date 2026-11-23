@@ -8,6 +8,12 @@ Salida, en la raiz del directorio (contrato con la accion CodeDeployToECS):
 
 Los parametros de cuenta llegan como variables de entorno del proyecto
 CodeBuild; nunca se escriben en el repositorio.
+
+New Relic (Entrega 4) es opcional y por cuenta. Si el proyecto CodeBuild define
+NR_APP_NAME y SSM_NR_LICENSE_ARN, la task definition activa el agente: agrega
+NEW_RELIC_ENABLED=true, el nombre de la app y la licencia como secreto de SSM,
+que ECS resuelve al arrancar la tarea. Sin esas variables la task definition
+queda igual que en la Entrega 3. OBS_LAB_ENABLED y NEW_RELIC_HOST son opcionales.
 """
 import json
 import os
@@ -25,6 +31,9 @@ REQUIRED = (
     "AWS_REGION",
     "IMAGE_URI",
 )
+NEW_RELIC_PAIR = ("NR_APP_NAME", "SSM_NR_LICENSE_ARN")
+SSM_ARN = re.compile(r"arn:aws[a-z-]*:ssm:[a-z0-9-]+:\d{12}:parameter/\S+")
+APP_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}")
 CONTAINER_NAME = "blacklists"
 CONTAINER_PORT = 5000
 IMAGE_PLACEHOLDER = "<IMAGE1_NAME>"
@@ -34,6 +43,41 @@ TASKDEF_PLACEHOLDER = "<TASK_DEFINITION>"
 def fail(message):
     print("prepare_cd: " + message, file=sys.stderr, flush=True)
     return 1
+
+
+def add_optional_runtime(container, env):
+    """Agrega New Relic y el laboratorio de errores si la cuenta los define."""
+    app_name, license_arn = (env.get(name, "").strip() for name in NEW_RELIC_PAIR)
+    lab = env.get("OBS_LAB_ENABLED", "").strip().lower()
+    host = env.get("NEW_RELIC_HOST", "").strip()
+
+    if bool(app_name) != bool(license_arn):
+        return "NR_APP_NAME y SSM_NR_LICENSE_ARN deben definirse juntas o ninguna"
+    if lab not in ("", "true", "false"):
+        return "OBS_LAB_ENABLED debe ser true o false"
+    if (host or lab) and not app_name:
+        return "NEW_RELIC_HOST y OBS_LAB_ENABLED requieren NR_APP_NAME y SSM_NR_LICENSE_ARN"
+    if not app_name:
+        return None
+    if not APP_NAME.fullmatch(app_name):
+        return "NR_APP_NAME solo admite letras, numeros, punto, guion y guion bajo"
+    if not SSM_ARN.fullmatch(license_arn):
+        return "SSM_NR_LICENSE_ARN debe ser el ARN de un parametro de SSM"
+    if host and not re.fullmatch(r"[a-z0-9.-]+\.nr-data\.net", host):
+        return "NEW_RELIC_HOST debe ser un collector de New Relic (*.nr-data.net)"
+
+    environment = container.setdefault("environment", [])
+    environment += [
+        {"name": "NEW_RELIC_ENABLED", "value": "true"},
+        {"name": "NEW_RELIC_APP_NAME", "value": app_name},
+        {"name": "NEW_RELIC_LOG", "value": "stderr"},
+        {"name": "OBS_LAB_ENABLED", "value": lab or "false"},
+    ]
+    if host:
+        environment.append({"name": "NEW_RELIC_HOST", "value": host})
+    container.setdefault("secrets", []).append(
+        {"name": "NEW_RELIC_LICENSE_KEY", "valueFrom": license_arn})
+    return None
 
 
 def main(root=None, env=None):
@@ -65,6 +109,10 @@ def main(root=None, env=None):
     if ports != [CONTAINER_PORT]:
         return fail("el contenedor debe exponer solo el puerto 5000")
 
+    error = add_optional_runtime(containers[0], env)
+    if error:
+        return fail(error)
+
     appspec = (root / "deploy" / "appspec.yaml").read_text(encoding="utf-8")
     for expected in (TASKDEF_PLACEHOLDER, 'ContainerName: "blacklists"', "ContainerPort: 5000"):
         if expected not in appspec:
@@ -78,8 +126,10 @@ def main(root=None, env=None):
     (out / "imageDetail.json").write_text(
         json.dumps({"ImageURI": values["IMAGE_URI"]}) + "\n", encoding="utf-8"
     )
-    print("prepare_cd: artefactos listos en dist/cd/ para " + values["IMAGE_URI"].split("/")[-1],
-          flush=True)
+    monitoring = "New Relic activo como " + env["NR_APP_NAME"].strip() \
+        if env.get("NR_APP_NAME", "").strip() else "New Relic desactivado"
+    print("prepare_cd: artefactos listos en dist/cd/ para " + values["IMAGE_URI"].split("/")[-1]
+          + " (" + monitoring + ")", flush=True)
     return 0
 
 
