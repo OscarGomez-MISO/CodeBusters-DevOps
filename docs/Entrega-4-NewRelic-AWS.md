@@ -4,9 +4,19 @@ Responsable: José Miguel Pardo Díaz (Integrante 2). Complementa
 `docs/Entrega-4-NewRelic-Local.md` (Oscar), que cubre el agente y la prueba local.
 
 > Estado de validación: el cambio de `scripts/prepare_cd.py` y sus pruebas se validaron
-> en local con Python 3.11 (95 pruebas aprobadas, sin `tests/test_postgres.py`). Falta la
-> ejecución en una cuenta AWS. Registrar aquí la fecha y el resultado reales cuando se
-> ejecute.
+> en local con Python 3.11 (95 pruebas aprobadas, sin `tests/test_postgres.py`).
+>
+> Ejecución en AWS (cuenta del Integrante 2, `us-east-1`, 2026-11-22 UTC-5): el merge del
+> PR #22 (commit `b054ece`) disparó la ejecución `9d1c6001-d66f-4a3c-b242-cf2c8da99dca`,
+> que terminó en `Succeeded` a las 21:28. La task definition `cb-e3-i2-blacklists:11`
+> trae `NEW_RELIC_ENABLED=true`, `NEW_RELIC_APP_NAME=cb-e4-i2-cloud`,
+> `OBS_LAB_ENABLED=false` y el secreto `NEW_RELIC_LICENSE_KEY` desde SSM. El agente
+> registró `Reporting to` a las 21:23 y la entidad `cb-e4-i2-cloud` muestra transacciones
+> por ruta y consultas a PostgreSQL (RDS). Postman pasó 7/7 contra el ALB.
+>
+> Hallazgo: con la configuración por defecto, el agente cuenta como error las respuestas
+> 4xx esperadas (400, 401, 409). Con tráfico de prueba, la transacción con mayor tasa de
+> error llegó a 55,56 %. Hay que tenerlo en cuenta al definir Apdex y alertas.
 
 ## 1. Alcance
 
