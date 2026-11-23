@@ -4,6 +4,9 @@
 # El proyecto CodeBuild necesita modo privilegiado (Docker) y estas variables,
 # propias de cada cuenta (ver docs/Entrega-3-CodeBuild-ECR.md):
 #   ECR_URI, TASK_FAMILY, EXEC_ROLE_ARN, SSM_DB_ARN, SSM_JWT_ARN, LOG_GROUP
+# Opcionales (Entrega 4, ver docs/Entrega-4-NewRelic-AWS.md): NR_APP_NAME y
+# SSM_NR_LICENSE_ARN activan New Relic en la task definition; OBS_LAB_ENABLED y
+# NEW_RELIC_HOST solo se usan con ellas. Sin estas variables no cambia nada.
 # AWS_REGION y CODEBUILD_RESOLVED_SOURCE_VERSION los aporta CodeBuild.
 #
 # Todo va en una sola fase: CodeBuild detiene la fase en el primer comando que
