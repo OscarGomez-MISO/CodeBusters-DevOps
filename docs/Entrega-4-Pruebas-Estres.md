@@ -266,7 +266,7 @@ Llenar solo con datos observados. Ventanas con zona explícita.
 | Integrante | SHA | E1 inicio–fin | E1 solicitudes / fallos | E1 p95 agregado (Locust) | E2 inicio–fin | E2 usuarios máx. | E2 solicitudes / fallos | E2 p95 agregado (Locust) | Observaciones |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 - Oscar | `425722dc3e1dc7d55f3c6c34ca5e7d5442c3611e` | 27/11/2026 22:40:23-22:43:24 UTC-5 | 596 / 0 | 86 ms | 27/11/2026 22:45:43-22:51:43 UTC-5 | 25 | 5656 / 0 | 97 ms | Fuente: HTML final, contrastado con log; diferencias del CSV periódico declaradas en el registro de Oscar |
-| 2 - Jose Miguel | | | | | | | | | |
+| 2 - Jose Miguel | `e6374570355e92dd7827d557732609f252bd651d` | 28/11/2026 04:40:53-04:43:54 UTC-5 | 657 / 0 | 13 ms | 28/11/2026 04:45:54-04:51:55 UTC-5 | 25 | 6154 / 0 | 13 ms | Fuente: `*_stats.csv` (Aggregated), exit code 0; Locust en CloudShell `us-east-1`, sin red desde Colombia. E2 extendido con 50 usuarios, 04:53:55-05:02:56 UTC-5: 14873 / 0, p95 30 ms, p99 96 ms, CPU máx. 77,5 % (E1 13,2 %, E2 44,8 %). New Relic: Apdex 1 y 0 % de error en las tres ventanas. Detalle en [Entrega-4-Ejecucion-Cloud-Jose.md](Entrega-4-Ejecucion-Cloud-Jose.md) |
 | 3 - Fabio | | | | | | | | | |
 | 4 - Juan David | | | | | | | | | |
 

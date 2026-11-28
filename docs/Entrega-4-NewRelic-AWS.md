@@ -5,6 +5,8 @@ Responsable: José Miguel Pardo Díaz (Integrante 2). Complementa
 
 La ejecución posterior en el ambiente compartido de Oscar se documenta en
 [Entrega-4-Ejecucion-Cloud-Oscar.md](Entrega-4-Ejecucion-Cloud-Oscar.md).
+Las pruebas E1 a E4 del Integrante 2 en su propia cuenta se documentan en
+[Entrega-4-Ejecucion-Cloud-Jose.md](Entrega-4-Ejecucion-Cloud-Jose.md).
 
 > Estado de validación: el cambio de `scripts/prepare_cd.py` y sus pruebas se validaron
 > en local con Python 3.11 (95 pruebas aprobadas, sin `tests/test_postgres.py`).
