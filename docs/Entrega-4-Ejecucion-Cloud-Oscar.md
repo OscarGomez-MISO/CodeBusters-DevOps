@@ -122,6 +122,97 @@ el inicio de Locust y el log de siembra marca el inicio del trafico tras prepara
 correos. Se usan las ventanas del HTML para correlacionar con New Relic, declarando
 que incluyen la preparacion inicial del escenario.
 
+### New Relic: evidencia acotada de E1
+
+Se inspeccionaron las capturas nuevas de la carpeta privada
+`Entrega 4/EvidenciasPruebasE1`: `340 - 343.png` (Summary),
+`Transactions 340 - 343.png` y `Database 340 - 343.png`.
+Las tres muestran la entidad `cb-e4-i1-cloud` y el selector
+`Nov 28, 03:40 - Nov 28, 03:43`, a diferencia de las capturas iniciales de 30 minutos.
+El selector visible no expone segundos ni zona horaria; se registra el rango mostrado,
+sin afirmar que la imagen certifica por si sola los limites exactos del ejecutor
+03:40:23-03:43:24 UTC. Los archivos antiguos `Summary.png`, `Transaction.png` y
+`Database.png` no son la fuente de estos valores.
+
+| Vista / metrica | Valor observado en el rango seleccionado |
+| --- | --- |
+| Summary: tiempo promedio del servicio | 5,09 ms |
+| Summary: Apdex nativo de APM | 1,00; T=0,5 s |
+| Summary: throughput promedio | 174 solicitudes/min |
+| Summary: tasa de errores | 0 % |
+| Transactions: mayor tiempo promedio entre transacciones | 7,17 ms; coincide con POST /blacklists en la tabla de Summary |
+| Transactions: mayor tasa de errores entre transacciones | 0 % |
+| Transactions: mayor throughput entre transacciones | 106 solicitudes/min; no equivale al throughput total de Summary |
+| Transactions: participacion del tiempo consumido | GET /blacklists: 53,96 %; POST /blacklists: 41,31 %; GET /health: 4,30 %; GET /version: 0,43 % |
+| Databases: participacion del tiempo consumido | Postgres select: 31,57 %; Postgres blacklists select: 31,55 %; rollback: 15,86 %; commit: 11,98 %; blacklists insert: 9,05 % |
+
+En el rango seleccionado de E1, el servicio presento Apdex 1,00 y tasa de errores
+0 %, con tiempo interno promedio de 5,09 ms. Las operaciones de lectura de PostgreSQL
+representaron aproximadamente el 63,12 % del tiempo consumido de DB mostrado.
+Estas participaciones son de tiempo, no de cantidad de solicitudes ni de fallos;
+el valor de rollback no demuestra por si solo un error de base de datos.
+
+Los 5,09 ms internos no contradicen los 80,53 ms medidos por Locust: observan limites
+distintos y los rangos de las capturas solo se muestran con precision de minuto.
+El throughput de APM tampoco se presenta como un recuento identico al del ejecutor.
+Las capturas respaldan el comportamiento estable de E1. La comparacion con E2 se
+presenta a continuacion, manteniendo separados los rangos y fuentes.
+
+### New Relic: evidencia acotada de E2 y comparacion
+
+Se inspeccionaron `Summary.png`, `Transaction.png` y `Databases.png` de la carpeta
+privada `Entrega 4/EvidenciasPruebasE2`. Las tres muestran `cb-e4-i1-cloud` y el
+selector `Nov 28, 03:45 - Nov 28, 03:52`. Este rango acotado abarca la corrida E2
+registrada por el ejecutor; no se afirma identidad exacta de segundos o zona horaria
+a partir del selector, que solo muestra minutos y no expone la zona.
+
+| Vista / metrica | Valor observado en el rango seleccionado |
+| --- | --- |
+| Summary: tiempo promedio del servicio | 5,04 ms |
+| Summary: Apdex nativo de APM | 1,00; T=0,5 s |
+| Summary: throughput promedio | 791,86 solicitudes/min |
+| Summary: tasa global de errores | 0,018 % |
+| Summary: tiempos promedio por transaccion | POST /blacklists: 7,68 ms; GET /blacklists: 4,33 ms; GET /health: 3,48 ms; GET /version: 0,85 ms |
+| Summary: otra transaccion observada | `POST <unmatched>`: tasa de errores 100 %, tiempo promedio 1,57 ms; su codigo HTTP y causa no se ven en la captura |
+| Transactions: mayor tiempo promedio entre transacciones | 7,68 ms |
+| Transactions: mayor throughput entre transacciones | 554 solicitudes/min; no equivale al throughput total de Summary |
+| Transactions: mayor tasa de errores entre transacciones | 100 %; es el maximo de un tipo de transaccion, no la tasa global del servicio |
+| Transactions: participacion del tiempo consumido | GET /blacklists: 60,11 %; POST /blacklists: 37,21 %; GET /health: 2,30 %; GET /version: 0,37 %; `POST <unmatched>`: 0,0056 %; `GET <unmatched>`: 0,0038 % |
+| Databases: participacion del tiempo consumido | Postgres select: 37,66 %; Postgres blacklists select: 26,06 %; rollback: 16,08 %; commit: 12,53 %; blacklists insert: 7,68 % |
+
+| Metrica de Summary | E1 | E2 |
+| --- | --- | --- |
+| Tiempo interno promedio | 5,09 ms | 5,04 ms |
+| Apdex mostrado, T=0,5 s | 1,00 | 1,00 |
+| Throughput promedio | 174 solicitudes/min | 791,86 solicitudes/min |
+| Tasa global de errores | 0 % | 0,018 % |
+
+El throughput de APM crecio aproximadamente 4,55 veces entre los rangos seleccionados,
+mientras el tiempo interno promedio se mantuvo alrededor de 5 ms y el Apdex mostrado
+en 1,00. En PostgreSQL, las lecturas representaron aproximadamente 63,12 % del tiempo
+consumido en E1 y 63,72 % en E2. El tiempo consumido y el volumen de operaciones
+aumentan visualmente con la carga, pero las capturas no demuestran un cuello de
+botella de DB ni proporcionan un p95 exacto por consulta.
+
+No se declara que E2 tuvo cero errores en New Relic: Summary muestra 0,018 % global
+y una transaccion `POST <unmatched>` con 100 % de errores dentro de su propio grupo.
+La causa y el codigo HTTP requieren consultar el detalle de esa transaccion; no se
+atribuyen automaticamente a la siembra, autenticacion, un error 5xx ni al escenario E3,
+que ocurrio despues. Locust registro cero fallos de sus usuarios virtuales, una fuente
+y un conjunto de solicitudes distintos. Tampoco se equipara el maximo por transaccion
+de Transactions con la tasa global ni se confunde la participacion del tiempo con
+el porcentaje de solicitudes.
+
+Texto breve para el informe:
+
+> Al aumentar la carga de E1 a E2, New Relic mostro un incremento del throughput
+> promedio de 174 a 791,86 solicitudes/min, con tiempo interno cercano a 5 ms y
+> Apdex de 1,00 en ambos rangos seleccionados. Las lecturas concentraron cerca del
+> 63 % del tiempo consumido en PostgreSQL, sin evidencia de saturacion en estas
+> capturas. Aunque Locust no registro fallos, APM mostro una tasa global de errores
+> de 0,018 % en E2 y una transaccion POST no asociada a una ruta reconocida, cuyo
+> diagnostico requiere revisar su detalle.
+
 ### Capacidad: complemento de CloudWatch
 
 Se consultaron `CPUUtilization` y `MemoryUtilization` de `AWS/ECS`, con dimensiones
@@ -271,8 +362,8 @@ red y ALB y no equivale al tiempo interno de APM ni al de PostgreSQL.
 | --- | --- |
 | I1-NR-CLOUD / I1-NR-DB iniciales | Capturas aportadas en el chat: entidad cloud, transacciones y PostgreSQL visibles |
 | I1-LOAD | HTML de E1/E2 y tablas anteriores, medidos por el ejecutor |
-| I1-PERF / I1-APDEX E1 | Pendiente: Summary, Transactions y Databases en 22:40:23-22:43:24 UTC-5 |
-| I1-PERF / I1-APDEX E2 | Pendiente: mismas vistas en 22:45:43-22:51:43 UTC-5 |
+| I1-PERF / I1-APDEX E1 | Tres capturas acotadas inspeccionadas en EvidenciasPruebasE1: selector 28/11 03:40-03:43; Summary 5,09 ms, Apdex 1,00 y errores 0 %; Transactions y PostgreSQL documentados en la seccion 3. La imagen no expone segundos ni zona |
+| I1-PERF / I1-APDEX E2 | Summary, Transaction y Databases inspeccionados en EvidenciasPruebasE2: selector 28/11 03:45-03:52; 5,04 ms, Apdex 1,00, 791,86 solicitudes/min y errores globales 0,018 %; comparacion y limites en la seccion 3 |
 | I1-ERROR | Summary muestra el aumento de errores; falta el detalle de ControlledMonitoringError y lab.scenario en E3 |
 | I1-ALERT | Configuracion, issue cerrado y correos reales comprobados; apertura 04:04 y cierre 04:10 del 28/11 en hora del panel, duracion 6 minutos; falta ID y confirmar zona horaria |
 | I1-FINAL | Coleccion final 7/7, salud 200, version 2.2.0 y laboratorio 404; restauracion AWS Succeeded, revision 19 estable |
