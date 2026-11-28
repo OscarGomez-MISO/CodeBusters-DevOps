@@ -302,8 +302,8 @@ se conserva por separado el instante observado en Issues & Activity y el correo 
 ### Evidencia real del ciclo de alerta
 
 Oscar confirmo la recepcion de ambos correos y actualizo las capturas en la carpeta
-privada `Entrega 4/EvidenciasPruebasE3`. Se inspeccionaron los ocho archivos actuales,
-incluyendo las vistas acotadas y las dos partes del detalle del incidente:
+privada `Entrega 4/EvidenciasPruebasE3`. Se inspeccionaron los nueve archivos actuales,
+incluyendo las vistas acotadas, las dos partes del incidente y Errors Inbox:
 
 | Archivo | Resultado observado |
 | --- | --- |
@@ -315,6 +315,7 @@ incluyendo las vistas acotadas y las dos partes del detalle del incidente:
 | `Databases.png` | Mismo rango 04:04-04:12; participacion del tiempo consumido de PostgreSQL: select 44,60 %, blacklists select 32,17 % y rollback 23,23 % |
 | `Error-P1.png` | Detalle del issue critico cerrado y consulta NRQL que cuenta HTTP 5xx; umbral mayor que 5 durante 2 minutos y serie con aumento temporal de errores, seguido de retorno a la linea base |
 | `Error-P2.png` | Continuacion del issue: cronologia con 1 alert event y 1 resolved, etiquetas de la condicion, agente 14.3.0 y mapa de dependencias de la aplicacion con la base de datos |
+| `CotrolledMonitoringError.png` | Errors Inbox de cb-e4-i1-cloud: grupo `app.observability:ControlledMonitoringError`, mensaje `Controlled error for the observability lab`, 125 ocurrencias en 28/11/2026 04:00:00-04:12:00 segun el panel; estado del grupo `Unresolved`. Se conserva el nombre real del archivo, con su errata |
 
 Los correos prueban la entrega real de notificaciones, no solo la configuracion del
 destino. La captura adicional del issue confirma las horas de apertura y cierre con
@@ -354,10 +355,20 @@ en la ruta de laboratorio y no requiere una falla de DB.
 no del error de aplicacion en Errors Inbox. Confirman la condicion, su cronologia y
 la resolucion del evento, pero no muestran el nombre `ControlledMonitoringError`,
 su mensaje, stack trace ni el atributo `lab.scenario=controlled_error`.
-El codigo de `app/observability.py` define esa excepcion y ese atributo; esa
-configuracion no sustituye una captura que demuestre su recepcion en New Relic.
-Se conserva pendiente unicamente ese detalle especifico de la excepcion dentro de
-I1-ERROR; la transaccion controlada y el ciclo del incidente ya estan respaldados.
+La captura adicional `CotrolledMonitoringError.png`, en cambio, si confirma la
+recepcion de la excepcion: muestra el grupo `app.observability:ControlledMonitoringError`,
+el mensaje `Controlled error for the observability lab` y 125 ocurrencias. Ese conteo
+coincide con los 125 HTTP 500 del CSV de E3. La serie del grupo se concentra en el
+periodo del error controlado y vuelve a la linea base despues; no se interpreta
+el estado `Unresolved` del grupo como una nueva solicitud fallida ni como evidencia
+de que siga abierto el issue de alertas. Se registran por separado el grupo de
+errores `Unresolved` y el issue de alerta `Closed`.
+
+La captura corresponde a la lista de grupos, no a una ocurrencia individual: no
+expone stack trace ni `lab.scenario=controlled_error`. El codigo de
+`app/observability.py` configura ese atributo, pero no se declara comprobada su
+recepcion hasta verlo en el detalle. En I1-ERROR quedan confirmados clase, mensaje,
+conteo y correlacion temporal; permanece pendiente la captura de traza y atributos.
 Las etiquetas de cuenta, politica y condicion en la segunda imagen no se confunden
 con el identificador del issue; este ultimo sigue sin verse.
 
@@ -385,6 +396,8 @@ Texto breve para el informe:
 > mantuvieron 0 % de errores. El issue critico paso de activo a cerrado, con duracion
 > de seis minutos y correos reales de apertura y cierre; las graficas muestran el
 > descenso de errores y la recuperacion del Apdex al cesar el fallo controlado.
+> Errors Inbox registro 125 ocurrencias de ControlledMonitoringError con el mensaje
+> del laboratorio, coincidiendo con las 125 respuestas HTTP 500 del ejecutor.
 
 ### Comprobacion funcional final
 
@@ -421,7 +434,7 @@ red y ALB y no equivale al tiempo interno de APM ni al de PostgreSQL.
 | I1-LOAD | HTML de E1/E2 y tablas anteriores, medidos por el ejecutor |
 | I1-PERF / I1-APDEX E1 | Tres capturas acotadas inspeccionadas en EvidenciasPruebasE1: selector 28/11 03:40-03:43; Summary 5,09 ms, Apdex 1,00 y errores 0 %; Transactions y PostgreSQL documentados en la seccion 3. La imagen no expone segundos ni zona |
 | I1-PERF / I1-APDEX E2 | Summary, Transactions y Databases inspeccionados en EvidenciasPruebasE2: selector 28/11 03:45-03:52; 5,04 ms, Apdex 1,00, 791,86 solicitudes/min y errores globales 0,018 %; comparacion y limites en la seccion 3 |
-| I1-ERROR | Vistas acotadas E3/recuperacion inspeccionadas: errores globales 20,43 %; POST /observability/error con errores 100 % y rutas normales con 0 %. Las dos partes del issue no muestran la excepcion ControlledMonitoringError ni lab.scenario: ese detalle sigue pendiente |
+| I1-ERROR | Errors Inbox confirma app.observability:ControlledMonitoringError, mensaje del laboratorio y 125 ocurrencias, coincidentes con el CSV. Vistas E3/recuperacion: errores globales 20,43 %, ruta controlada 100 % y rutas normales 0 %. La lista de grupos no expone stack trace ni lab.scenario: solo esa ampliacion de detalle queda pendiente |
 | I1-ALERT | Configuracion, issue cerrado, cronologia de 1 evento resuelto y correos reales comprobados; apertura 04:04 y cierre 04:10 del 28/11 en hora del panel, duracion 6 minutos; falta ID del issue y confirmar zona horaria |
 | I1-FINAL | Coleccion final 7/7, salud 200, version 2.2.0 y laboratorio 404; restauracion AWS Succeeded, revision 19 estable |
 
