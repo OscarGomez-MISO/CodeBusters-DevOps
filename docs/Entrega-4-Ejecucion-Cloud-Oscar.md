@@ -302,8 +302,8 @@ se conserva por separado el instante observado en Issues & Activity y el correo 
 ### Evidencia real del ciclo de alerta
 
 Oscar confirmo la recepcion de ambos correos y actualizo las capturas en la carpeta
-privada `Entrega 4/EvidenciasPruebasE3`. Se inspeccionaron los nueve archivos actuales,
-incluyendo las vistas acotadas, las dos partes del incidente y Errors Inbox:
+privada `Entrega 4/EvidenciasPruebasE3`. Se inspeccionaron los diez archivos actuales,
+incluyendo las vistas acotadas, las dos partes del incidente, Errors Inbox y sus atributos:
 
 | Archivo | Resultado observado |
 | --- | --- |
@@ -316,6 +316,7 @@ incluyendo las vistas acotadas, las dos partes del incidente y Errors Inbox:
 | `Error-P1.png` | Detalle del issue critico cerrado y consulta NRQL que cuenta HTTP 5xx; umbral mayor que 5 durante 2 minutos y serie con aumento temporal de errores, seguido de retorno a la linea base |
 | `Error-P2.png` | Continuacion del issue: cronologia con 1 alert event y 1 resolved, etiquetas de la condicion, agente 14.3.0 y mapa de dependencias de la aplicacion con la base de datos |
 | `CotrolledMonitoringError.png` | Errors Inbox de cb-e4-i1-cloud: grupo `app.observability:ControlledMonitoringError`, mensaje `Controlled error for the observability lab`, 125 ocurrencias en 28/11/2026 04:00:00-04:12:00 segun el panel; estado del grupo `Unresolved`. Se conserva el nombre real del archivo, con su errata |
+| `lab.scenario.png` | Detalle de atributos: appName cb-e4-i1-cloud; error.class app.observability:ControlledMonitoringError; mensaje del laboratorio; lab.scenario controlled_error; http.statusCode y response.status 500; request.method POST; path WebTransaction/Flask/POST /observability/error; origen /app/app/observability.py, funcion controlled_error, linea 49; error.expected false |
 
 Los correos prueban la entrega real de notificaciones, no solo la configuracion del
 destino. La captura adicional del issue confirma las horas de apertura y cierre con
@@ -364,11 +365,25 @@ el estado `Unresolved` del grupo como una nueva solicitud fallida ni como eviden
 de que siga abierto el issue de alertas. Se registran por separado el grupo de
 errores `Unresolved` y el issue de alerta `Closed`.
 
-La captura corresponde a la lista de grupos, no a una ocurrencia individual: no
-expone stack trace ni `lab.scenario=controlled_error`. El codigo de
-`app/observability.py` configura ese atributo, pero no se declara comprobada su
-recepcion hasta verlo en el detalle. En I1-ERROR quedan confirmados clase, mensaje,
-conteo y correlacion temporal; permanece pendiente la captura de traza y atributos.
+La captura del grupo se complementa con `lab.scenario.png`, donde se leen los
+atributos del error recibido: `lab.scenario=controlled_error`, `http.statusCode=500`,
+`response.status=500`, `request.method=POST`, el path
+`WebTransaction/Flask/POST /observability/error` y el mismo nombre de clase y mensaje.
+Tambien se ve `appName=cb-e4-i1-cloud` y el origen del error:
+`code.filepath=/app/app/observability.py`, `code.function=controlled_error` y
+`code.lineno=49`. Estos datos verifican la recepcion del atributo configurado en el
+codigo, no solo su existencia en el repositorio.
+
+El detalle registra `error.expected=false`; se conserva ese valor real, sin marcar
+el fallo deliberado como esperado para retirarlo del analisis. El campo `count=9`
+visible en ese detalle no se usa como total del escenario: las 125 ocurrencias se
+obtienen de la lista del grupo y coinciden con el CSV. La captura muestra atributos
+y ubicacion de codigo, no un stack trace completo. No se declara que muestre una
+cadena de llamadas que no esta visible.
+
+Con la lista del grupo, los atributos y las vistas de la transaccion queda completada
+I1-ERROR: clase, mensaje, conteo, ruta, HTTP 500, atributo del laboratorio y correlacion
+temporal. No hace falta otra captura para acreditar la recepcion del error controlado.
 Las etiquetas de cuenta, politica y condicion en la segunda imagen no se confunden
 con el identificador del issue; este ultimo sigue sin verse.
 
@@ -398,6 +413,8 @@ Texto breve para el informe:
 > descenso de errores y la recuperacion del Apdex al cesar el fallo controlado.
 > Errors Inbox registro 125 ocurrencias de ControlledMonitoringError con el mensaje
 > del laboratorio, coincidiendo con las 125 respuestas HTTP 500 del ejecutor.
+> En el detalle se verificaron lab.scenario=controlled_error, la ruta POST
+> /observability/error y HTTP 500, junto al archivo y funcion donde se genero el fallo.
 
 ### Comprobacion funcional final
 
@@ -434,7 +451,7 @@ red y ALB y no equivale al tiempo interno de APM ni al de PostgreSQL.
 | I1-LOAD | HTML de E1/E2 y tablas anteriores, medidos por el ejecutor |
 | I1-PERF / I1-APDEX E1 | Tres capturas acotadas inspeccionadas en EvidenciasPruebasE1: selector 28/11 03:40-03:43; Summary 5,09 ms, Apdex 1,00 y errores 0 %; Transactions y PostgreSQL documentados en la seccion 3. La imagen no expone segundos ni zona |
 | I1-PERF / I1-APDEX E2 | Summary, Transactions y Databases inspeccionados en EvidenciasPruebasE2: selector 28/11 03:45-03:52; 5,04 ms, Apdex 1,00, 791,86 solicitudes/min y errores globales 0,018 %; comparacion y limites en la seccion 3 |
-| I1-ERROR | Errors Inbox confirma app.observability:ControlledMonitoringError, mensaje del laboratorio y 125 ocurrencias, coincidentes con el CSV. Vistas E3/recuperacion: errores globales 20,43 %, ruta controlada 100 % y rutas normales 0 %. La lista de grupos no expone stack trace ni lab.scenario: solo esa ampliacion de detalle queda pendiente |
+| I1-ERROR | Completada: Errors Inbox confirma clase, mensaje y 125 ocurrencias; lab.scenario.png confirma controlled_error, POST /observability/error, HTTP 500 y origen en observability.py:49. Vistas E3/recuperacion: errores globales 20,43 %, ruta controlada 100 % y rutas normales 0 %. Se documentan atributos y ubicacion de codigo, no un stack trace completo |
 | I1-ALERT | Configuracion, issue cerrado, cronologia de 1 evento resuelto y correos reales comprobados; apertura 04:04 y cierre 04:10 del 28/11 en hora del panel, duracion 6 minutos; falta ID del issue y confirmar zona horaria |
 | I1-FINAL | Coleccion final 7/7, salud 200, version 2.2.0 y laboratorio 404; restauracion AWS Succeeded, revision 19 estable |
 
