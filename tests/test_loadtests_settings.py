@@ -42,13 +42,15 @@ def test_generated_run_id_is_valid():
     ({"LOCUST_GUARD_WINDOW": "5"}, "between 10 and 600"),
 ])
 def test_invalid_settings(extra, message):
+    values = env(**extra)
     with pytest.raises(ValueError, match=re.escape(message)):
-        s.load_settings(env(**extra))
+        s.load_settings(values)
 
 
 def test_error_message_never_contains_token():
+    values = env(LOCUST_TOKEN="Bearer secret-value")
     with pytest.raises(ValueError) as error:
-        s.load_settings(env(LOCUST_TOKEN="Bearer secret-value"))
+        s.load_settings(values)
     assert "secret-value" not in str(error.value)
 
 
@@ -81,14 +83,16 @@ def test_weights_match_the_70_25_5_mix():
 
 
 def test_seed_emails_are_stable_and_fictitious():
-    assert s.seed_emails(3) == s.seed_emails(3)
+    assert s.seed_emails(3) == [
+        "seed-000@example.com", "seed-001@example.com", "seed-002@example.com"]
     assert all(e.endswith("@example.com") for e in s.seed_emails(3))
 
 
 def test_unique_emails_carry_run_id():
     first, second = s.unique_email("r1"), s.unique_email("r1")
     assert first != second
-    assert first.startswith("load-r1-") and first.endswith("@example.com")
+    assert first.startswith("load-r1-")
+    assert first.endswith("@example.com")
 
 
 def test_failure_guard_waits_for_a_full_window():

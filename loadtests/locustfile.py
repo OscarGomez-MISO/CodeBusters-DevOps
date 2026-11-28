@@ -9,7 +9,7 @@ See docs/Entrega-4-Pruebas-Estres.md for the variables, scenarios and safety rul
 """
 import logging
 import os
-import random
+import secrets
 import sys
 import time
 
@@ -32,6 +32,7 @@ from settings import (  # noqa: E402
 )
 
 log = logging.getLogger("cb-e4-load")
+HTTP_FAILURE = "HTTP {}"
 
 try:
     SETTINGS = load_settings(os.environ)
@@ -124,7 +125,7 @@ class BlacklistUser(HttpUser):
 
     @task(WEIGHT_LOOKUP)
     def lookup_seeded_email(self):
-        email = random.choice(SEEDS)
+        email = secrets.choice(SEEDS)
         with self.client.get(
             "/blacklists/" + email,
             headers=_auth_headers(),
@@ -132,7 +133,7 @@ class BlacklistUser(HttpUser):
             catch_response=True,
         ) as response:
             if response.status_code != 200:
-                response.failure("HTTP {}".format(response.status_code))
+                response.failure(HTTP_FAILURE.format(response.status_code))
             elif response.json().get("is_blacklisted") is not True:
                 response.failure("seed email not blacklisted")
 
@@ -150,14 +151,14 @@ class BlacklistUser(HttpUser):
             catch_response=True,
         ) as response:
             if response.status_code != 201:
-                response.failure("HTTP {}".format(response.status_code))
+                response.failure(HTTP_FAILURE.format(response.status_code))
 
     @task(WEIGHT_PROBE)
     def health_or_version(self):
-        path = random.choice(("/health", "/version"))
+        path = secrets.choice(("/health", "/version"))
         with self.client.get(path, name="GET " + path, catch_response=True) as response:
             if response.status_code != 200:
-                response.failure("HTTP {}".format(response.status_code))
+                response.failure(HTTP_FAILURE.format(response.status_code))
 
 
 if SETTINGS.scenario:
