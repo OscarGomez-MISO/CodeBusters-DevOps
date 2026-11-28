@@ -16,6 +16,7 @@ Para la Entrega 3, consultar [Contenedor local con SQLite](docs/Entrega-3-Conten
 Permite probar la imagen Docker sin PostgreSQL, RDS ni una cuenta AWS.
 Para la Entrega 4, consultar [New Relic local](docs/Entrega-4-NewRelic-Local.md).
 Apdex, errores y alertas: [guia](docs/Entrega-4-Apdex-Errores-Alertas.md) y `monitoring/`.
+Pruebas de carga y estres: [guia](docs/Entrega-4-Pruebas-Estres.md) y `loadtests/`.
 La instrumentacion es optativa: se activa en runtime, sin cambiar el puerto ni
 guardar licencias en la imagen. Las pruebas siguen usando SQLite y mocks.
 El procedimiento siguiente conserva el desarrollo local con PostgreSQL.

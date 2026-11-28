@@ -1,0 +1,3 @@
+# Herramientas de carga (Entrega 4). Entorno separado: no mezclar con requirements.txt.
+# Probado con Python 3.11.
+locust==2.47.0
