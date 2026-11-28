@@ -160,7 +160,7 @@ presenta a continuacion, manteniendo separados los rangos y fuentes.
 
 ### New Relic: evidencia acotada de E2 y comparacion
 
-Se inspeccionaron `Summary.png`, `Transaction.png` y `Databases.png` de la carpeta
+Se inspeccionaron `Summary.png`, `Transactions.png` y `Databases.png` de la carpeta
 privada `Entrega 4/EvidenciasPruebasE2`. Las tres muestran `cb-e4-i1-cloud` y el
 selector `Nov 28, 03:45 - Nov 28, 03:52`. Este rango acotado abarca la corrida E2
 registrada por el ejecutor; no se afirma identidad exacta de segundos o zona horaria
@@ -301,16 +301,20 @@ se conserva por separado el instante observado en Issues & Activity y el correo 
 
 ### Evidencia real del ciclo de alerta
 
-Oscar confirmo la recepcion de ambos correos y aporto cinco capturas en la carpeta
-privada `Entrega 4/EvidenciasPruebasE3`. Se inspeccionaron sus contenidos:
+Oscar confirmo la recepcion de ambos correos y actualizo las capturas en la carpeta
+privada `Entrega 4/EvidenciasPruebasE3`. Se inspeccionaron los ocho archivos actuales,
+incluyendo las vistas acotadas y las dos partes del detalle del incidente:
 
 | Archivo | Resultado observado |
 | --- | --- |
 | `CorreoIssueAbierta.png` | `Critical priority issue is active`; condicion `cb-e4-i1-errores-5xx`, resultado mayor que 5,0 durante 2 minutos, entidad `cb-e4-i1-cloud`, politica `cb-e4-i1-politica`; pie de correo identifica `cb-e4-i1-workflow` |
 | `CorreoIssueCerrada.png` | `Critical priority issue is closed` para la misma condicion y entidad; `Issue duration: 6 minutes` |
-| `Summary.png` | El panel muestra el incremento temporal de errores y descenso del Apdex de APM durante el error controlado, seguido de recuperacion; usa un rango amplio de 30 minutos |
+| `Summary.png` | Selector 28/11 04:04-04:12; tiempo interno promedio 5,24 ms, Apdex 0,80 con T=0,5 s, throughput 41 solicitudes/min y errores globales 20,43 %; actividad del issue activado a las 04:04 y cerrado a las 04:10 en hora del panel |
 | `Issue.png` | `Current state: Closed`; activado el 28/11/2026 a las 04:04 y cerrado a las 04:10, segun la hora visible del panel; duracion 6 minutos, un evento critico y notificacion por correo |
-| `Database.png` | PostgreSQL instrumentado; distribucion del tiempo consumido: select 39,90 %, blacklists select 26,22 %, rollback 17,78 %, commit 10,05 % y blacklists insert 6,05 %; rango de 30 minutos, no exclusivo de E1/E2 |
+| `Transactions.png` | Mismo rango 04:04-04:12; participacion del tiempo consumido: GET /blacklists 75,10 %, GET /health 16,55 % y POST /observability/error 8,35 %; mayor tiempo promedio 6,59 ms y mayor throughput por transaccion 25 solicitudes/min |
+| `Databases.png` | Mismo rango 04:04-04:12; participacion del tiempo consumido de PostgreSQL: select 44,60 %, blacklists select 32,17 % y rollback 23,23 % |
+| `Error-P1.png` | Detalle del issue critico cerrado y consulta NRQL que cuenta HTTP 5xx; umbral mayor que 5 durante 2 minutos y serie con aumento temporal de errores, seguido de retorno a la linea base |
+| `Error-P2.png` | Continuacion del issue: cronologia con 1 alert event y 1 resolved, etiquetas de la condicion, agente 14.3.0 y mapa de dependencias de la aplicacion con la base de datos |
 
 Los correos prueban la entrega real de notificaciones, no solo la configuracion del
 destino. La captura adicional del issue confirma las horas de apertura y cierre con
@@ -320,14 +324,67 @@ con que el panel muestre UTC. Esa conversion sigue siendo una inferencia: confir
 la zona del panel antes de transcribir 23:04 y 23:10 del 27/11 como horas Colombia.
 No se deducen segundos exactos ni el mecanismo de cierre a partir de la duracion.
 
-En Summary se observa un Apdex que cae aproximadamente a la franja 0,6-0,7 y luego
-regresa cerca de 1. Es una lectura visual del Apdex nativo de APM, no un valor exacto
-de E1/E2 ni prueba de activacion de la condicion NRQL de Apdex por duracion. El panel
-mezcla carga, errores y recuperacion: sus promedios no se trasladan a una sola corrida.
-Database confirma que la instrumentacion observa operaciones de lectura, insercion y
-transacciones de PostgreSQL. El peso relativo de `rollback` no prueba por si solo un
-error de base de datos; se requiere consultar la transaccion o traza correspondiente.
-La captura especifica de `ControlledMonitoringError` y sus atributos sigue pendiente.
+### E3: observacion del servicio y recuperacion
+
+El rango nuevo 28/11 04:04-04:12 del panel incluye parte del error controlado y parte
+de la recuperacion; no cubre los cinco minutos completos del script E3, cuyo inicio
+fue 04:01:40 UTC, ni representa una corrida E4 aislada. El selector no expone segundos
+ni una etiqueta de zona horaria. Las metricas siguientes se atribuyen a ese rango
+visible, no a toda la ejecucion del script.
+
+Summary muestra un Apdex de 0,80 para el rango seleccionado. La serie comienza cerca
+de 0,6-0,7 y luego regresa cerca de 1, mientras la serie de errores desciende desde
+aproximadamente el 30 % hasta la linea base. Son lecturas visuales de la evolucion,
+distintas del 20,43 % global y del Apdex 0,80 que figuran en los indicadores.
+
+La tabla de Summary identifica `POST /observability/error` con 100 % de errores y
+tiempo promedio de 2,14 ms. Las consultas normales `GET /blacklists` y `GET /health`
+registran errores 0 % y tiempos promedio de 6,59 ms y 4,38 ms, respectivamente.
+Esto respalda la separacion entre la ruta de fallo deliberado y las rutas normales;
+no se presenta el 100 % de la ruta controlada como indisponibilidad total del API.
+El Apdex nativo de APM no se equipara a la condicion NRQL basada solo en duracion,
+y las capturas no prueban que esta ultima haya abierto otro incidente.
+
+En DB se observan lecturas y rollback; las dos categorias de lectura suman 76,77 %
+del tiempo consumido mostrado. No se infiere que el rollback sea la causa de los
+errores HTTP ni que exista saturacion de PostgreSQL. El error deliberado se origina
+en la ruta de laboratorio y no requiere una falla de DB.
+
+`Error-P1.png` y `Error-P2.png` son dos partes del detalle del issue de alertas,
+no del error de aplicacion en Errors Inbox. Confirman la condicion, su cronologia y
+la resolucion del evento, pero no muestran el nombre `ControlledMonitoringError`,
+su mensaje, stack trace ni el atributo `lab.scenario=controlled_error`.
+El codigo de `app/observability.py` define esa excepcion y ese atributo; esa
+configuracion no sustituye una captura que demuestre su recepcion en New Relic.
+Se conserva pendiente unicamente ese detalle especifico de la excepcion dentro de
+I1-ERROR; la transaccion controlada y el ciclo del incidente ya estan respaldados.
+Las etiquetas de cuenta, politica y condicion en la segunda imagen no se confunden
+con el identificador del issue; este ultimo sigue sin verse.
+
+### Resumen de las vistas APM de E1, E2 y E3/recuperacion
+
+| Metrica de Summary | E1 | E2 | E3 y recuperacion |
+| --- | --- | --- | --- |
+| Selector del panel, 28/11 | 03:40-03:43 | 03:45-03:52 | 04:04-04:12 |
+| Tiempo interno promedio | 5,09 ms | 5,04 ms | 5,24 ms |
+| Apdex nativo mostrado, T=0,5 s | 1,00 | 1,00 | 0,80 |
+| Throughput promedio | 174 solicitudes/min | 791,86 solicitudes/min | 41 solicitudes/min |
+| Errores globales | 0 % | 0,018 % | 20,43 % |
+| Proposito | Linea base | Carga creciente | Fallo deliberado y observacion de recuperacion |
+
+El menor throughput de E3 no se interpreta como perdida de capacidad: se uso otro
+perfil de trafico y el rango incluye la detencion de los errores y recuperacion.
+La tasa de 20,43 % de APM tampoco se equipara al 37,31 % del CSV del script, porque
+sus ventanas y conjuntos de solicitudes son distintos.
+
+Texto breve para el informe:
+
+> En el rango 04:04-04:12 del panel, que incluye parte de E3 y su recuperacion,
+> New Relic mostro Apdex de 0,80 y errores globales de 20,43 %. La ruta de error
+> deliberado registro 100 % de errores, mientras las consultas de blacklist y salud
+> mantuvieron 0 % de errores. El issue critico paso de activo a cerrado, con duracion
+> de seis minutos y correos reales de apertura y cierre; las graficas muestran el
+> descenso de errores y la recuperacion del Apdex al cesar el fallo controlado.
 
 ### Comprobacion funcional final
 
@@ -363,9 +420,9 @@ red y ALB y no equivale al tiempo interno de APM ni al de PostgreSQL.
 | I1-NR-CLOUD / I1-NR-DB iniciales | Capturas aportadas en el chat: entidad cloud, transacciones y PostgreSQL visibles |
 | I1-LOAD | HTML de E1/E2 y tablas anteriores, medidos por el ejecutor |
 | I1-PERF / I1-APDEX E1 | Tres capturas acotadas inspeccionadas en EvidenciasPruebasE1: selector 28/11 03:40-03:43; Summary 5,09 ms, Apdex 1,00 y errores 0 %; Transactions y PostgreSQL documentados en la seccion 3. La imagen no expone segundos ni zona |
-| I1-PERF / I1-APDEX E2 | Summary, Transaction y Databases inspeccionados en EvidenciasPruebasE2: selector 28/11 03:45-03:52; 5,04 ms, Apdex 1,00, 791,86 solicitudes/min y errores globales 0,018 %; comparacion y limites en la seccion 3 |
-| I1-ERROR | Summary muestra el aumento de errores; falta el detalle de ControlledMonitoringError y lab.scenario en E3 |
-| I1-ALERT | Configuracion, issue cerrado y correos reales comprobados; apertura 04:04 y cierre 04:10 del 28/11 en hora del panel, duracion 6 minutos; falta ID y confirmar zona horaria |
+| I1-PERF / I1-APDEX E2 | Summary, Transactions y Databases inspeccionados en EvidenciasPruebasE2: selector 28/11 03:45-03:52; 5,04 ms, Apdex 1,00, 791,86 solicitudes/min y errores globales 0,018 %; comparacion y limites en la seccion 3 |
+| I1-ERROR | Vistas acotadas E3/recuperacion inspeccionadas: errores globales 20,43 %; POST /observability/error con errores 100 % y rutas normales con 0 %. Las dos partes del issue no muestran la excepcion ControlledMonitoringError ni lab.scenario: ese detalle sigue pendiente |
+| I1-ALERT | Configuracion, issue cerrado, cronologia de 1 evento resuelto y correos reales comprobados; apertura 04:04 y cierre 04:10 del 28/11 en hora del panel, duracion 6 minutos; falta ID del issue y confirmar zona horaria |
 | I1-FINAL | Coleccion final 7/7, salud 200, version 2.2.0 y laboratorio 404; restauracion AWS Succeeded, revision 19 estable |
 
 Para tomar las capturas, usar un rango personalizado con fecha, hora y zona visibles.
