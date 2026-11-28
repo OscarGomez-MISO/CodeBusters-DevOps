@@ -3,7 +3,9 @@
 Responsable: Juan David Cuevas Perdomo (Integrante 4). Aplica a las cuatro cuentas:
 cada integrante la ejecuta sobre su entidad `cb-e4-i<N>-cloud` (y `-local` cuando se indique).
 
-> Estado: guía y configuración propuestas. **Todavía no contiene resultados observados.**
+> Estado: guía y configuración propuestas. El registro de la ejecución cloud de Oscar
+> se conserva en [Entrega-4-Ejecucion-Cloud-Oscar.md](Entrega-4-Ejecucion-Cloud-Oscar.md),
+> distinguiendo mediciones realizadas y evidencias aún pendientes de New Relic.
 > Los valores de las tablas de registro (sección 8) se llenan solo con datos reales, con
 > fecha, hora y zona. No presentar los ejemplos de esta guía como configuración aplicada.
 
@@ -144,7 +146,7 @@ Consultas AL1 y AL2 de la sección 6. Parámetros propuestos:
 
 | Parámetro | `errores-5xx` | `apdex` |
 | --- | --- | --- |
-| Consulta | `percentage(count(*), WHERE http.statusCode >= 500)` sobre `Transaction` web de la entidad | `apdex(duration, t: 0.5)` sobre `Transaction` web de la entidad |
+| Consulta | `percentage(count(*), WHERE numeric(http.statusCode) >= 500)` sobre `Transaction` web de la entidad | `apdex(duration, t: 0.5)` sobre `Transaction` web de la entidad |
 | Ventana de agregación | 1 minuto | 1 minuto |
 | Método de streaming | *Event timer*, 60 s (tráfico bajo e irregular) | *Event timer*, 60 s |
 | Umbral Critical | **por encima de 5** durante al menos **2 minutos** | **por debajo de 0,7** durante al menos **3 minutos** |
@@ -216,14 +218,14 @@ SELECT timestamp, transactionName, error.class, error.message, lab.scenario FROM
 SELECT count(*) FROM Transaction WHERE appName = 'cb-e4-iN-cloud' AND transactionType = 'Web' FACET http.statusCode TIMESERIES 1 minute SINCE 30 minutes ago
 
 -- ER3. Tasa 5xx frente a la tasa de error que calcula el agente
-SELECT percentage(count(*), WHERE http.statusCode >= 500) AS 'Tasa 5xx', percentage(count(*), WHERE error IS true) AS 'Tasa error agente' FROM Transaction WHERE appName = 'cb-e4-iN-cloud' AND transactionType = 'Web' TIMESERIES 1 minute SINCE 30 minutes ago
+SELECT percentage(count(*), WHERE numeric(http.statusCode) >= 500) AS 'Tasa 5xx', percentage(count(*), WHERE error IS true) AS 'Tasa error agente' FROM Transaction WHERE appName = 'cb-e4-iN-cloud' AND transactionType = 'Web' TIMESERIES 1 minute SINCE 30 minutes ago
 ```
 
 **Alertas** (AL1 y AL2 van, sin `SINCE`, en la condición; ver 5.2)
 
 ```sql
 -- AL1. Condición cb-e4-iN-errores-5xx
-SELECT percentage(count(*), WHERE http.statusCode >= 500) FROM Transaction WHERE appName = 'cb-e4-iN-cloud' AND transactionType = 'Web'
+SELECT percentage(count(*), WHERE numeric(http.statusCode) >= 500) FROM Transaction WHERE appName = 'cb-e4-iN-cloud' AND transactionType = 'Web'
 
 -- AL2. Condición cb-e4-iN-apdex
 SELECT apdex(duration, t: 0.5) FROM Transaction WHERE appName = 'cb-e4-iN-cloud' AND transactionType = 'Web'
@@ -287,7 +289,7 @@ Registro (llenar solo con datos observados):
 
 | Integrante | SHA | T | Apdex E1 (ventana) | Apdex E2 (ventana) | E3 inicio–fin | Incidente abierto | Correo recibido | Incidente cerrado | Observaciones |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 - Oscar | | | | | | | | | |
+| 1 - Oscar | `425722dc3e1dc7d55f3c6c34ca5e7d5442c3611e` | 0,5 s | Pendiente de captura de la ventana E1 | Pendiente de captura de la ventana E2 | 27/11/2026 23:01:40-23:06:41 UTC-5 | Confirmado por correo Critical priority issue is active; falta hora exacta e ID | Si, apertura y cierre; capturas inspeccionadas y recepcion confirmada por Oscar | Confirmado por correo Critical priority issue is closed; duracion visible 6 minutos | E3: 125 respuestas 500 y 210 consultas 200. E4: 83 consultas 200. Final: Postman 7/7 y laboratorio 404; revision 19 estable. Detalles en el registro de Oscar |
 | 2 - Jose Miguel | | | | | | | | | |
 | 3 - Fabio | | | | | | | | | |
 | 4 - Juan David | | | | | | | | | |
@@ -316,8 +318,10 @@ lugar de cuatro textos repetidos.
 ## 10. Limpieza
 
 Al terminar E4: `OBS_LAB_ENABLED=false` desplegado y verificado (paso 7). Después de la
-calificación, seguir la sección 14 de `docs/Entrega-3-Limpieza-AWS.md`, que incluye el
-parámetro de licencia en SSM y los objetos de New Relic de esta guía.
+calificación, seguir [la guía de limpieza de AWS](Entrega-3-Limpieza-AWS.md) para la
+infraestructura y [la sección 9 de la guía New Relic en AWS](Entrega-4-NewRelic-AWS.md#9-desactivar-o-retirar)
+para el parámetro de licencia y los objetos de New Relic. No retirar el ambiente
+compartido antes de la fecha de evaluación acordada.
 
 ---
 

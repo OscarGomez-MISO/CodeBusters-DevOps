@@ -4,8 +4,9 @@ Responsable: Fabio Andrés Guaidia Ruiz (Integrante 3). Aplica a las cuatro cuen
 cada integrante corre la carga contra **su propio ALB** y analiza su entidad
 `cb-e4-i<N>-cloud` en New Relic.
 
-> Estado: el escenario se probó **solo en local** (Gunicorn + SQLite, sin New Relic,
-> 2026-11-27 UTC-5; ver sección 9). **Todavía no hay resultados cloud.** Las tablas de
+> Validación original de Fabio: escenario probado **en local** (Gunicorn + SQLite, sin New Relic,
+> 2026-11-27 UTC-5; ver sección 9). La ejecución cloud de Oscar se registra en
+> [Entrega-4-Ejecucion-Cloud-Oscar.md](Entrega-4-Ejecucion-Cloud-Oscar.md). Las tablas de
 > registro (sección 10) se llenan solo con datos observados, con fecha, hora y zona.
 
 Archivos:
@@ -264,7 +265,7 @@ Llenar solo con datos observados. Ventanas con zona explícita.
 
 | Integrante | SHA | E1 inicio–fin | E1 solicitudes / fallos | E1 p95 agregado (Locust) | E2 inicio–fin | E2 usuarios máx. | E2 solicitudes / fallos | E2 p95 agregado (Locust) | Observaciones |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 - Oscar | | | | | | | | | |
+| 1 - Oscar | `425722dc3e1dc7d55f3c6c34ca5e7d5442c3611e` | 27/11/2026 22:40:23-22:43:24 UTC-5 | 596 / 0 | 86 ms | 27/11/2026 22:45:43-22:51:43 UTC-5 | 25 | 5656 / 0 | 97 ms | Fuente: HTML final, contrastado con log; diferencias del CSV periódico declaradas en el registro de Oscar |
 | 2 - Jose Miguel | | | | | | | | | |
 | 3 - Fabio | | | | | | | | | |
 | 4 - Juan David | | | | | | | | | |

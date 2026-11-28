@@ -3,6 +3,9 @@
 Responsable: José Miguel Pardo Díaz (Integrante 2). Complementa
 `docs/Entrega-4-NewRelic-Local.md` (Oscar), que cubre el agente y la prueba local.
 
+La ejecución posterior en el ambiente compartido de Oscar se documenta en
+[Entrega-4-Ejecucion-Cloud-Oscar.md](Entrega-4-Ejecucion-Cloud-Oscar.md).
+
 > Estado de validación: el cambio de `scripts/prepare_cd.py` y sus pruebas se validaron
 > en local con Python 3.11 (95 pruebas aprobadas, sin `tests/test_postgres.py`).
 >
@@ -76,17 +79,25 @@ export SSM_NR_LICENSE_ARN=arn:aws:ssm:${AWS_REGION}:${ACCOUNT_ID}:parameter${SSM
 echo "$NR_APP_NAME  $SSM_NR_PARAM"
 ```
 
-El parámetro queda bajo `/${PREFIX}/`. El rol de ejecución de ECS de la guía manual ya
-puede leer `/${PREFIX}/*`, así que **no hay que cambiar permisos**. Comprobarlo:
+El parámetro queda bajo `/${PREFIX}/`. **Comprobar los permisos del rol de ejecución de
+ECS antes de activar el agente**: algunas cuentas permiten leer `/${PREFIX}/*`, pero
+otras enumeran únicamente los ARN de `DATABASE_URL` y `JWT_SECRET_KEY`.
 
 ```bash
 aws iam get-role-policy --role-name $EXEC_ROLE --policy-name leer-parametros-ssm \
   --query 'PolicyDocument.Statement[].Resource' --output text
 ```
 
-Debe mostrar `arn:aws:ssm:...:parameter/<prefijo>/*` (política de la sección 4 de la guía
-manual). Si en la cuenta se creó con otro nombre, listarlas con
-`aws iam list-role-policies --role-name $EXEC_ROLE`.
+Si muestra `arn:aws:ssm:...:parameter/<prefijo>/*`, el nuevo parámetro ya está cubierto.
+Si la política enumera ARN individuales, agregar el ARN de `NEW_RELIC_LICENSE_KEY` a
+la lista `Resource` de `ssm:GetParameters`, conservando los existentes; no ampliar a
+todos los parámetros. Si se usa una clave KMS propia, revisar también su permiso de
+descifrado según la guía de ECS.
+
+Si la política se creó con otro nombre, listarlas con
+`aws iam list-role-policies --role-name $EXEC_ROLE`. En la cuenta de Oscar se llama
+`read-own-runtime-parameters`; el nombre `leer-parametros-ssm` del comando es el ejemplo
+de la guía original, no un nombre obligatorio.
 
 ## 4. Guardar la licencia en SSM
 
@@ -152,7 +163,7 @@ aws codepipeline get-pipeline-state --name $PIPELINE \
 
 # Revisión activa: variables del agente y nombre del secreto (nunca su valor)
 TD=$(aws ecs describe-services --cluster $CLUSTER --services $SERVICE \
-  --query 'services[0].taskDefinition' --output text)
+  --query "services[0].taskSets[?status=='PRIMARY'].taskDefinition | [0]" --output text)
 aws ecs describe-task-definition --task-definition $TD \
   --query "taskDefinition.containerDefinitions[0].[environment[?starts_with(name,'NEW_RELIC') || name=='OBS_LAB_ENABLED'], secrets[].name]" \
   --output json
@@ -184,6 +195,10 @@ Esperado:
 
 Un mensaje en los logs o un HTTP 200 no reemplazan la captura de la entidad recibiendo
 datos.
+
+Con despliegues CodeDeploy Blue/Green, verificar el task set `PRIMARY` y las tareas
+que atienden tráfico. No tomar una revisión guardada más reciente ni el campo general
+`service.taskDefinition` como prueba suficiente de lo que está ejecutándose.
 
 ## 8. Escenario de errores (Juan David)
 
