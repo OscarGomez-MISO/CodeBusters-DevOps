@@ -16,13 +16,15 @@ evidencias pendientes de confirmar en New Relic. No contiene credenciales.
   Windows. El trafico viaja desde el equipo local hacia el ALB de AWS.
 - Horas del ejecutor en UTC; equivalencia para Colombia: UTC-5.
 
-El merge de documentacion posterior no cambia la imagen usada durante estas pruebas.
+El merge de documentacion posterior puede disparar otro build y despliegue; no cambia
+el SHA ni la imagen que se registran como objeto de estas pruebas.
 Se ejecutan los escenarios del repositorio, sin modificar workers, capacidad ni limites
 para forzar artificialmente una degradacion. Las altas usan correos ficticios.
 
 ## 2. Prerrequisitos
 
-La sesion AWS, el despliegue estable y las variables de New Relic se comprobaron por CLI.
+La sesion AWS, el despliegue estable y las variables de New Relic se comprobaron por CLI
+y, al estar disponible, mediante el servidor MCP oficial de AWS.
 Las capturas aportadas en el chat muestran la entidad cloud con operaciones PostgreSQL,
 dos condiciones habilitadas y el workflow de correo habilitado. No sustituyen las
 capturas de las ventanas de carga ni prueban por si solas la entrega de notificaciones.
@@ -59,8 +61,9 @@ UTF-8 del auxiliar local antes de continuar.
 
 El Apdex calculado con `apdex(duration, t: 0.5)` mide duracion; no se debe confundir
 automaticamente con el Apdex de APM afectado por errores reportados por el agente.
-La prueba del workflow no encontro issues historicos coincidentes. Su captura muestra
-`Last run: N/A`; no se declara como prueba de entrega de correo.
+La prueba inicial del workflow no encontro issues historicos coincidentes. Su captura
+mostraba `Last run: N/A`; la entrega real se comprobo posteriormente en E3 mediante
+los correos de apertura y cierre descritos en la seccion 4.
 
 Se mantuvo la configuracion del agente sin marcar globalmente los 4xx como esperados:
 la alerta de disponibilidad cuenta solo 5xx mediante `numeric(http.statusCode) >= 500`.
@@ -196,19 +199,56 @@ es necesario verificar la nueva revision desplegada y su respuesta 404 al finali
 | Trafico de recuperacion | 83 consultas normales, todas HTTP 200; 0 fallos |
 | Errores deliberados durante E4 | Ninguno; el proceso E3 ya habia terminado |
 | Build de restauracion | `cb-e3-i1-build:9dc4411e-d583-4c2d-b968-642230fcbd96`; 119 pruebas aprobadas, 0 fallidas, 0 errores, 0 omitidas |
-| Deployment de restauracion | `d-4C3F3KC2N`; estado final pendiente de verificar |
+| Deployment de restauracion | `d-4C3F3KC2N`; `Succeeded`, sin `errorInformation`; cierre AWS 27/11/2026 23:15:29 UTC-5 |
+| Pipeline de restauracion | `51d839ed-87af-4ad3-a6eb-a033174f9585`, `Succeeded`, sobre el mismo SHA bajo prueba |
+| Servicio restaurado | `cb-e3-i1-blacklists:19`, `PRIMARY`, `STEADY_STATE`; 1 tarea deseada y 1 ejecutandose, 0 pendientes |
+| Banderas de la revision 19 | `NEW_RELIC_ENABLED=true`, `NEW_RELIC_APP_NAME=cb-e4-i1-cloud`, `OBS_LAB_ENABLED=false` |
 
 La recuperacion comprobada por HTTP no demuestra por si sola que New Relic haya cerrado
 un incidente. La condicion evalua ventanas y tiene retrasos de ingestion, por lo que
 se conserva por separado el instante observado en Issues & Activity y el correo de cierre.
 
-La entrega de correo y el cierre del incidente deben confirmarse en New Relic y en el
-buzon del destinatario, no inferirse de respuestas HTTP. Se registran como pendientes
-hasta contar con sus capturas o con la consulta de incidentes de la politica.
+### Evidencia real del ciclo de alerta
+
+Oscar confirmo la recepcion de ambos correos y aporto tres capturas en la carpeta
+privada `Entrega 4/EvidenciasPruebasE3`. Se inspeccionaron sus contenidos:
+
+| Archivo | Resultado observado |
+| --- | --- |
+| `CorreoIssueAbierta.png` | `Critical priority issue is active`; condicion `cb-e4-i1-errores-5xx`, resultado mayor que 5,0 durante 2 minutos, entidad `cb-e4-i1-cloud`, politica `cb-e4-i1-politica`; pie de correo identifica `cb-e4-i1-workflow` |
+| `CorreoIssueCerrada.png` | `Critical priority issue is closed` para la misma condicion y entidad; `Issue duration: 6 minutes` |
+| `Summary.png` | El panel muestra el incremento temporal de errores y descenso del Apdex de APM durante el error controlado, seguido de recuperacion; usa un rango amplio de 30 minutos |
+
+Los correos prueban la entrega real de notificaciones, no solo la configuracion del
+destino. Las capturas no muestran el ID del issue ni las horas exactas de apertura y
+cierre; no se deducen sumando seis minutos a la hora de inicio del script. Tampoco
+permiten afirmar el mecanismo de cierre sin consultar el detalle del issue.
+
+En Summary se observa un Apdex que cae aproximadamente a la franja 0,6-0,7 y luego
+regresa cerca de 1. Es una lectura visual del Apdex nativo de APM, no un valor exacto
+de E1/E2 ni prueba de activacion de la condicion NRQL de Apdex por duracion. El panel
+mezcla carga, errores y recuperacion: sus promedios no se trasladan a una sola corrida.
+La captura especifica de `ControlledMonitoringError` y sus atributos sigue pendiente.
+
+### Comprobacion funcional final
+
+El 27/11/2026 a las 23:14:31 UTC-5, con la revision 19 ya primaria, se verificaron
+HTTP 200 en `/health`, `/version` (version `2.2.0`) y una consulta autenticada de
+blacklist. `POST /observability/error` devolvio 404: la ruta de laboratorio quedo
+desactivada sin apagar New Relic. El deployment completo su retencion blue/green a
+las 23:15:29 UTC-5 y se comprobo una sola tarea estable.
+
+La coleccion completa se repitio entre 23:14:36 y 23:14:39 UTC-5: 7 solicitudes y
+7 aserciones aprobadas, 0 fallos, exit code 0; secuencia 200, 201, 200, 409, 200,
+400 y 401. Tiempo medio de respuesta: 98 ms (minimo 71 ms, maximo 176 ms).
+Se conservaron `postman-final.xml`, `postman-final.log` y `postman-final.json`.
 
 ## 5. Evidencias y limites
 
-Los CSV, HTML y JUnit se conservan fuera del repositorio. El JWT privado no se imprime,
+Los CSV, HTML y JUnit no se versionan. Los originales estan en la carpeta temporal
+`cb-e4-evidence-oscar-20261127` y existe una copia privada, ignorada por Git y Docker,
+en `.local/entrega4-evidencias-oscar-20261127`. Las capturas de correo permanecen fuera
+del repositorio, en la carpeta privada indicada arriba. El JWT privado no se imprime,
 no se exporta en reportes y no se versiona. Antes de compartir capturas, ocultar la
 licencia, el token, el identificador de cuenta AWS y el correo completo del destino.
 
@@ -225,9 +265,9 @@ red y ALB y no equivale al tiempo interno de APM ni al de PostgreSQL.
 | I1-LOAD | HTML de E1/E2 y tablas anteriores, medidos por el ejecutor |
 | I1-PERF / I1-APDEX E1 | Pendiente: Summary, Transactions y Databases en 22:40:23-22:43:24 UTC-5 |
 | I1-PERF / I1-APDEX E2 | Pendiente: mismas vistas en 22:45:43-22:51:43 UTC-5 |
-| I1-ERROR | Pendiente: ControlledMonitoringError y atributo lab.scenario en la ventana de E3 |
-| I1-ALERT | Configuracion aportada por capturas; apertura, entrega de correo y cierre pendientes de confirmar |
-| I1-FINAL | Pendiente de ejecutar tras restaurar el laboratorio |
+| I1-ERROR | Summary muestra el aumento de errores; falta el detalle de ControlledMonitoringError y lab.scenario en E3 |
+| I1-ALERT | Configuracion y correos reales de apertura/cierre comprobados; duracion visible de 6 minutos; faltan ID y horas exactas del issue |
+| I1-FINAL | Coleccion final 7/7, salud 200, version 2.2.0 y laboratorio 404; restauracion AWS Succeeded, revision 19 estable |
 
 Para tomar las capturas, usar un rango personalizado con fecha, hora y zona visibles.
 Si New Relic muestra UTC, convertir con las ventanas de la tabla de E1/E2; no usar la

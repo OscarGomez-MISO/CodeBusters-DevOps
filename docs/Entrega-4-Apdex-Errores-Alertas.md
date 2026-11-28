@@ -289,7 +289,7 @@ Registro (llenar solo con datos observados):
 
 | Integrante | SHA | T | Apdex E1 (ventana) | Apdex E2 (ventana) | E3 inicio–fin | Incidente abierto | Correo recibido | Incidente cerrado | Observaciones |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 - Oscar | `425722dc3e1dc7d55f3c6c34ca5e7d5442c3611e` | 0,5 s | Pendiente de captura de la ventana E1 | Pendiente de captura de la ventana E2 | 27/11/2026 23:01:40-23:06:41 UTC-5 | Pendiente de evidencia New Relic | Pendiente de confirmacion del buzon | Pendiente de evidencia New Relic | E3: 125 respuestas 500 controladas y 210 consultas 200; detalles y recuperacion en el registro de Oscar |
+| 1 - Oscar | `425722dc3e1dc7d55f3c6c34ca5e7d5442c3611e` | 0,5 s | Pendiente de captura de la ventana E1 | Pendiente de captura de la ventana E2 | 27/11/2026 23:01:40-23:06:41 UTC-5 | Confirmado por correo Critical priority issue is active; falta hora exacta e ID | Si, apertura y cierre; capturas inspeccionadas y recepcion confirmada por Oscar | Confirmado por correo Critical priority issue is closed; duracion visible 6 minutos | E3: 125 respuestas 500 y 210 consultas 200. E4: 83 consultas 200. Final: Postman 7/7 y laboratorio 404; revision 19 estable. Detalles en el registro de Oscar |
 | 2 - Jose Miguel | | | | | | | | | |
 | 3 - Fabio | | | | | | | | | |
 | 4 - Juan David | | | | | | | | | |
