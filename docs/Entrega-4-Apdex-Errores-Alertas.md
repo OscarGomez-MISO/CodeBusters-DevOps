@@ -291,7 +291,7 @@ Registro (llenar solo con datos observados):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 - Oscar | `425722dc3e1dc7d55f3c6c34ca5e7d5442c3611e` | 0,5 s | 1,00 en Summary; selector visible 28/11 03:40-03:43, sin segundos ni zona explicitos | 1,00 en Summary; selector visible 28/11 03:45-03:52, sin segundos ni zona explicitos | 27/11/2026 23:01:40-23:06:41 UTC-5 | Confirmado por correo e Issue.png: 28/11 04:04 en hora del panel; falta ID y confirmar zona | Si, apertura y cierre; capturas inspeccionadas y recepcion confirmada por Oscar | Confirmado por correo e Issue.png: 28/11 04:10 en hora del panel, duracion 6 minutos | E1/E2: vistas APM y DB acotadas inspeccionadas; errores globales 0 % / 0,018 %. `POST <unmatched>` en E2 requiere detalle, no se infiere causa. E3: 125 respuestas 500 y 210 consultas 200. E4: 83 consultas 200. Final: Postman 7/7 y laboratorio 404; revision 19 estable. Detalles en el registro de Oscar |
 | 2 - Jose Miguel | | | | | | | | | |
-| 3 - Fabio | | | | | | | | | |
+| 3 - Fabio | `425722dc3e1dc7d55f3c6c34ca5e7d5442c3611e` | 0,5 s (entidad y NRQL `t: 0.5`) | 1,00 (NRQL por transacción y Summary), 27/11 23:06:45-23:10:00 UTC-5 | 1,00 (NRQL por transacción y Summary), 27/11 23:14:40-23:20:45 UTC-5; también 1,00 en Summary con 50 usuarios, 23:40-23:49 | Pendiente | Pendiente | Pendiente | Pendiente | La condición de Apdex no se abriría: Apdex 1,00 incluso a 43 rps. E3/E4 pendientes. Carga y desempeño: sección 11 de la guía de pruebas de estrés |
 | 4 - Juan David | | | | | | | | | |
 
 ---

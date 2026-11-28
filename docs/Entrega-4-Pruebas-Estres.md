@@ -8,6 +8,7 @@ cada integrante corre la carga contra **su propio ALB** y analiza su entidad
 > 2026-11-27 UTC-5; ver sección 9). La ejecución cloud de Oscar se registra en
 > [Entrega-4-Ejecucion-Cloud-Oscar.md](Entrega-4-Ejecucion-Cloud-Oscar.md). Las tablas de
 > registro (sección 10) se llenan solo con datos observados, con fecha, hora y zona.
+> Ejecución cloud de Fabio (cuenta del Integrante 3, 2026-11-27 UTC-5): sección 11.
 
 Archivos:
 
@@ -267,7 +268,7 @@ Llenar solo con datos observados. Ventanas con zona explícita.
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 - Oscar | `425722dc3e1dc7d55f3c6c34ca5e7d5442c3611e` | 27/11/2026 22:40:23-22:43:24 UTC-5 | 596 / 0 | 86 ms | 27/11/2026 22:45:43-22:51:43 UTC-5 | 25 | 5656 / 0 | 97 ms | Fuente: HTML final, contrastado con log; diferencias del CSV periódico declaradas en el registro de Oscar |
 | 2 - Jose Miguel | | | | | | | | | |
-| 3 - Fabio | | | | | | | | | |
+| 3 - Fabio | `425722dc3e1dc7d55f3c6c34ca5e7d5442c3611e` | 27/11/2026 23:06:52-23:09:49 UTC-5 | 593 / 0 | 110 ms | 27/11/2026 23:14:43-23:20:40 UTC-5 | 25 | 5451 / 0 | 260 ms | Cliente: Mac en Colombia hacia ALB us-east-1 (~95 ms de base). E2 extendido a 50 usuarios 23:40:05-23:49:01: 13208 / 0, p95 260 ms, ~43 rps. Detalle en la sección 11 |
 | 4 - Juan David | | | | | | | | | |
 
 Evidencias por integrante:
@@ -278,6 +279,60 @@ Evidencias por integrante:
 | I<N>-PERF | New Relic: Summary, Transactions y Databases en la misma ventana de E1 y E2 |
 
 No mostrar el JWT, la licencia de New Relic ni el ID de la cuenta AWS.
+
+## 11. Ejecución cloud del Integrante 3
+
+Cuenta AWS del Integrante 3 (`us-east-1`) y entidad `cb-e4-i3-cloud` en su cuenta de New
+Relic (región US). Commit `425722dc` (merge del PR #25), ejecución de pipeline `76a09c4c`,
+despliegue `d-7FXMNK92N`, task definition `cb-e3-i3-blacklists:16`: 0,25 vCPU, 512 MB y
+1 worker síncrono de Gunicorn. Locust corrió desde un Mac en Colombia. Postman: 7/7 antes
+de la carga.
+
+Nota del despliegue: el primer intento de Deploy de `76a09c4c` falló con *Another deployment
+to the AWS CodeDeploy deployment group ... is already in progress*. Había otro despliegue en
+curso de una ejecución detenida con `--abandon` cuando ya estaba en Deploy. Se reintentó la
+etapa y terminó en `Succeeded`. Detener una ejecución en Deploy no cancela su despliegue en
+CodeDeploy.
+
+| Escalón | Ventana UTC-5 | rps (mediana) | p50 / p95 cliente (Locust) | App prom. (NR) | DB prom. (NR) | Apdex (NRQL, T = 0,5) | CPU tarea (máx.) | p95 ALB→tarea |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| E1 (1 → 5 usuarios) | 23:06:52-23:09:49 | 3,3 (promedio) | 97 / 110 ms | 5,2 ms GET, 8,0 ms POST | 2,6 ms GET, 4,5 ms POST | 1,00 | 13 % | — |
+| E2, 10 usuarios | 23:14:43-23:17:40 | 9,0 | 97 / 100 ms | ~5 ms | ~2,5 ms | 1,00 | 20 % | — |
+| E2, 25 usuarios | 23:17:40-23:20:40 | 22,2 | 120 / 190 ms | 4,8 ms GET, 8,4 ms POST | 2,5 ms GET, 5,1 ms POST | 1,00 | 40 % | — |
+| E2x, 10 usuarios | 23:40:05-23:43:01 | 9,2 | 99 / 110 ms | ~7 ms | ~4 ms | 1,00 (Summary, ventana E2x) | 22 % | 14-18 ms |
+| E2x, 25 usuarios | 23:43:01-23:46:01 | 22,7 | 98 / 110 ms | ~7 ms | ~4 ms | 1,00 (Summary, ventana E2x) | 45 % | 22-23 ms |
+| E2x, 50 usuarios | 23:46:01-23:49:01 | 43,2 | 140 / 260 ms | ~8 ms | ~5 ms | 1,00 (Summary, ventana E2x) | 79 % | 109-120 ms |
+
+Fuentes: Locust `*_stats.csv` y `*_stats_history.csv` (p50/p95 como mediana de la serie
+por escalón, sin la rampa), New Relic (`FROM Transaction` facetado por `name`, y
+`FROM Metric` para el throughput), CloudWatch `AWS/ECS CPUUtilization` y
+`AWS/ApplicationELB TargetResponseTime` p95. En las tres corridas, 0 fallos y el guardia
+de fallos no se activó. Memoria estable en 16-17 %.
+
+Hallazgos:
+
+1. **La app y PostgreSQL no se degradaron.** Con hasta 43 rps, el tiempo dentro de la app
+   (5-8 ms) y el de DB (2,5-5 ms) casi no cambiaron, y el Apdex se mantuvo en 1,00.
+2. **El límite está en el cómputo de la tarea.** A 50 usuarios la CPU llegó a 79 % de
+   0,25 vCPU y el p95 del ALB hacia la tarea pasó de ~23 a ~110 ms. APM no ve ese tiempo
+   porque es espera antes de que el único worker síncrono tome la solicitud. Opciones a
+   evaluar: más workers o hilos de Gunicorn, más vCPU o una segunda tarea. No se aplicaron
+   en esta entrega.
+3. **La latencia del cliente incluye la red.** Unos 95 ms de base desde Colombia hasta
+   `us-east-1`. No se compara directamente con `duration` de APM.
+4. **New Relic muestrea los eventos `Transaction`.** A 50 usuarios la serie de eventos se
+   quedó en ~20 rps (límite por defecto del agente), mientras que `FROM Metric
+   apm.service.transaction.duration` mostró los ~43 rps reales. Para throughput bajo carga
+   alta conviene usar métricas; los percentiles de eventos siguen siendo una muestra.
+5. **New Relic cuenta más solicitudes que Locust.** Las diferencias vienen de los health
+   checks del ALB (`GET /health`) y de la siembra (`POST /blacklists`).
+6. New Relic marca la RDS como *uninstrumented database*. Es lo esperado: APM mide la DB
+   desde la aplicación y no instala un agente en RDS.
+
+Evidencias, fuera del repositorio porque contienen la URL del ALB o datos de la cuenta:
+`I3-NR-LOCAL`, `I3-NR-CLOUD`, `I3-PIPE`, `I3-LOAD`, `I3-PERF-E1`, `I3-PERF-E2` e
+`I3-PERF-E2X`, junto con los CSV y reportes HTML de Locust. E3/E4 (errores y alertas) se
+ejecutan aparte con la guía de Apdex, errores y alertas.
 
 ## Fuentes oficiales
 
