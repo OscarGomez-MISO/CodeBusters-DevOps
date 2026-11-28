@@ -210,7 +210,7 @@ se conserva por separado el instante observado en Issues & Activity y el correo 
 
 ### Evidencia real del ciclo de alerta
 
-Oscar confirmo la recepcion de ambos correos y aporto tres capturas en la carpeta
+Oscar confirmo la recepcion de ambos correos y aporto cinco capturas en la carpeta
 privada `Entrega 4/EvidenciasPruebasE3`. Se inspeccionaron sus contenidos:
 
 | Archivo | Resultado observado |
@@ -218,16 +218,24 @@ privada `Entrega 4/EvidenciasPruebasE3`. Se inspeccionaron sus contenidos:
 | `CorreoIssueAbierta.png` | `Critical priority issue is active`; condicion `cb-e4-i1-errores-5xx`, resultado mayor que 5,0 durante 2 minutos, entidad `cb-e4-i1-cloud`, politica `cb-e4-i1-politica`; pie de correo identifica `cb-e4-i1-workflow` |
 | `CorreoIssueCerrada.png` | `Critical priority issue is closed` para la misma condicion y entidad; `Issue duration: 6 minutes` |
 | `Summary.png` | El panel muestra el incremento temporal de errores y descenso del Apdex de APM durante el error controlado, seguido de recuperacion; usa un rango amplio de 30 minutos |
+| `Issue.png` | `Current state: Closed`; activado el 28/11/2026 a las 04:04 y cerrado a las 04:10, segun la hora visible del panel; duracion 6 minutos, un evento critico y notificacion por correo |
+| `Database.png` | PostgreSQL instrumentado; distribucion del tiempo consumido: select 39,90 %, blacklists select 26,22 %, rollback 17,78 %, commit 10,05 % y blacklists insert 6,05 %; rango de 30 minutos, no exclusivo de E1/E2 |
 
 Los correos prueban la entrega real de notificaciones, no solo la configuracion del
-destino. Las capturas no muestran el ID del issue ni las horas exactas de apertura y
-cierre; no se deducen sumando seis minutos a la hora de inicio del script. Tampoco
-permiten afirmar el mecanismo de cierre sin consultar el detalle del issue.
+destino. La captura adicional del issue confirma las horas de apertura y cierre con
+precision de minuto, pero no muestra su ID ni una etiqueta explicita de zona horaria.
+Su consulta incluye limites UTC con sufijo `Z`; la correlacion con E3 es compatible
+con que el panel muestre UTC. Esa conversion sigue siendo una inferencia: confirmar
+la zona del panel antes de transcribir 23:04 y 23:10 del 27/11 como horas Colombia.
+No se deducen segundos exactos ni el mecanismo de cierre a partir de la duracion.
 
 En Summary se observa un Apdex que cae aproximadamente a la franja 0,6-0,7 y luego
 regresa cerca de 1. Es una lectura visual del Apdex nativo de APM, no un valor exacto
 de E1/E2 ni prueba de activacion de la condicion NRQL de Apdex por duracion. El panel
 mezcla carga, errores y recuperacion: sus promedios no se trasladan a una sola corrida.
+Database confirma que la instrumentacion observa operaciones de lectura, insercion y
+transacciones de PostgreSQL. El peso relativo de `rollback` no prueba por si solo un
+error de base de datos; se requiere consultar la transaccion o traza correspondiente.
 La captura especifica de `ControlledMonitoringError` y sus atributos sigue pendiente.
 
 ### Comprobacion funcional final
@@ -266,7 +274,7 @@ red y ALB y no equivale al tiempo interno de APM ni al de PostgreSQL.
 | I1-PERF / I1-APDEX E1 | Pendiente: Summary, Transactions y Databases en 22:40:23-22:43:24 UTC-5 |
 | I1-PERF / I1-APDEX E2 | Pendiente: mismas vistas en 22:45:43-22:51:43 UTC-5 |
 | I1-ERROR | Summary muestra el aumento de errores; falta el detalle de ControlledMonitoringError y lab.scenario en E3 |
-| I1-ALERT | Configuracion y correos reales de apertura/cierre comprobados; duracion visible de 6 minutos; faltan ID y horas exactas del issue |
+| I1-ALERT | Configuracion, issue cerrado y correos reales comprobados; apertura 04:04 y cierre 04:10 del 28/11 en hora del panel, duracion 6 minutos; falta ID y confirmar zona horaria |
 | I1-FINAL | Coleccion final 7/7, salud 200, version 2.2.0 y laboratorio 404; restauracion AWS Succeeded, revision 19 estable |
 
 Para tomar las capturas, usar un rango personalizado con fecha, hora y zona visibles.
